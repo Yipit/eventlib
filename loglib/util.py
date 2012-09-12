@@ -1,5 +1,7 @@
 from django.conf import settings
 
+UNKNOWN_IP = '0.0.0.0'
+
 
 def get_ip(request):
     if settings.LOCAL:

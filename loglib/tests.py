@@ -161,6 +161,7 @@ def test_log_insert_datetime(find_event, process, datetime):
     loglib.log('app.Event', data)
     data['__datetime__'].should.be.equals('tea time')
 
+
 def test_event_validate():
     class MyEvent(loglib.BaseEvent):
         pass
