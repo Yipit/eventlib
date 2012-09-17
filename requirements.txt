@@ -1,6 +1,6 @@
-Django==1.4
 celery==3.0.9
 mock==1.0b1
 nose==1.2.0
 sure==1.0.6
-wsgiref==0.1.2
+python-dateutil==1.5
+coverage
