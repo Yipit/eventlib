@@ -1,6 +1,6 @@
 import sure
 _ = sure
-from .... import ejson
+from eventlib import ejson
 from datetime import datetime
 from mock import Mock, patch
 
@@ -73,7 +73,7 @@ def test_serialization_with_custom_object():
     def serialize_person(instance):
         return {"name": instance.name, "age": instance.age}
     ejson.dumps(value).should.be.equals(
-        '{"__class__": "eventlib.ejson.tests.unit.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
+        '{"__class__": "tests.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
 
 
 def test_deserialization_registry():
@@ -114,7 +114,7 @@ def test_auto_deserialization():
         return Person(data['name'], data['age'])
 
     person = ejson.loads(
-        '{"__class__": "eventlib.ejson.tests.unit.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
+        '{"__class__": "tests.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
     person.should.be.a(Person)
     person.name.should.be.equals('Lincoln')
     person.age.should.be.equals(25)

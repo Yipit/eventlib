@@ -1,11 +1,11 @@
-from django.conf import settings
+from . import conf
 
 UNKNOWN_IP = '0.0.0.0'
 
 
 def get_ip(request):
-    if settings.LOCAL:
-        return settings.LOCAL_GEOLOCATION_IP
+    if conf.LOCAL_GEOLOCATION_IP:
+        return conf.LOCAL_GEOLOCATION_IP
 
     forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
 

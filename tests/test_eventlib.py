@@ -1,15 +1,7 @@
-import os
-import sys
-
-test_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, test_dir)
-os.environ["DJANGO_SETTINGS_MODULE"] = 'test_settings'
-
-
 from mock import Mock, patch
 
 import eventlib
-from eventlib import ejson, exceptions
+from eventlib import ejson, exceptions, conf
 
 
 def test_parse_event_name():
@@ -217,6 +209,7 @@ def test_process_data_clean(logger, find_event):
 @patch('eventlib.logger')
 def test_process_fails_gracefully(logger, find_event):
     eventlib.cleanup_handlers()
+    conf.DEVELOPMENT = False
 
     handler_fail = Mock()
     handler_fail.side_effect = ValueError('P0wned!!!')

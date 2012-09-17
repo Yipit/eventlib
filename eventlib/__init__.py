@@ -7,10 +7,11 @@ import logging
 from importlib import import_module
 from datetime import datetime
 from collections import OrderedDict
-from django.conf import settings
+from celery.task import task
 
 from .util import get_ip
 from . import ejson
+from . import conf
 from exceptions import (
     ValidationError, EventNotFoundError, InvalidEventNameError
 )
@@ -156,8 +157,6 @@ def log(name, data=None):
     function. Consult the RFC-00003-serialize-registry for more
     information.
     """
-    from .tasks import dispatch_event
-
     data = data or {}
     data.update(get_default_values(data))
 
@@ -167,7 +166,11 @@ def log(name, data=None):
     data = filter_data_values(data)
     data = ejson.dumps(data)        # TypeError
 
-    dispatch_event.delay(name, data)
+    # We don't use celery when developing
+    if conf.DEVELOPMENT:
+        process(name, data)
+    else:
+        process.delay(name, data)
 
 
 # ---- INTERNAL API ----
@@ -230,6 +233,7 @@ def find_handlers(event_name):
     return handlers
 
 
+@task
 def process(event_name, data):
     """Iterates over the event handler registry and execute each found
     handler.
@@ -256,7 +260,7 @@ def process(event_name, data):
             logger.warning(
                 (u'One of the handlers for the event "{}" has failed with the '
                  u'following exception: {}').format(event_name, str(exc)))
-            if settings.DEBUG:
+            if conf.DEVELOPMENT:
                 raise exc
 
 
