@@ -12,15 +12,15 @@ data that it expects. Here's an example:
 
 ```python
 # steadymark: ignore
->>> from loglib import log
+>>> from eventlib import log
 >>> log('app.EventName', {'username': 'test guy'})
 ```
 
-The event name above contains two very important pieces of information about the
-event: the app and the class name that
-inherits from `BaseEvent`. It is _required_ to declare your events in a
-module called `events` inside the app folder. We will go deeper into it
-in the next section.
+The event name above contains two very important pieces of information
+about the event: the app and the class name that inherits from
+`BaseEvent`. It is _required_ to declare your events in a module called
+`events` inside the app folder. We will go deeper into it in the next
+section.
 
 If, by any chance, you try to access an event that does not exist, a
 custom exception should be raised, stating exactly what happened:
@@ -45,7 +45,8 @@ custom exception should be raised, stating exactly what happened:
 This is a three step process.
 
  1. Declare an event object
- 1. Optionally provide a component to validate the data received by this event.
+ 1. Optionally provide a component to validate the data received by this
+    event.
  1. Describe the handlers.
 
  So, we end up with something like this:
@@ -58,38 +59,39 @@ This is a three step process.
       optional   handlers
      validator
 </pre>
+
 Declaring an event should be as simple as the following example:
 
 ```python
->>> from loglib import BaseEvent
+>>> from eventlib import BaseEvent
 >>> class DealClick(BaseEvent):
 ...     pass
 ```
 
 This is the only required step to declare an event. But, our event won't
-go anywhere without `handlers`. We use them to declare the actions
-that the event will actually trigger. Writing to a database, making an
-http call or executing a celery task are some examples of actions that
-can be declared in a handler.
+go anywhere without `handlers`. We use them to declare the actions that
+the event will actually trigger. Writing to a database, making an http
+call or executing a celery task are some examples of actions that can be
+declared in a handler.
 
 The first way to add a handler to an event is by adding a decorated
 method to your event class. Like this:
 
 ```python
->>> import loglib
->>> class EmailClick(loglib.BaseEvent):
-...     @loglib.handler
+>>> import eventlib
+>>> class EmailClick(eventlib.BaseEvent):
+...     @eventlib.handler
 ...     def increment_redis_key(self):
 ...         key = 'deal:{}:clicks'.format(self.data.get('key'))
 ...         self.redis(key).incr()
 ...
-...     @loglib.handler
+...     @eventlib.handler
 ...     def save_to_mysql(self):
 ...         data = self.data.copy()
 ...         data.pop('unused_key')
 ...         self.mysql('apps.EmailClick').save(**data)
 ...
->>> loglib.HANDLER_REGISTRY[EmailClick]
+>>> eventlib.HANDLER_REGISTRY[EmailClick]
 [<unbound method EmailClick.save_to_mysql>, <unbound method EmailClick.increment_redis_key>]
 ```
 
@@ -98,9 +100,9 @@ like when you need to declare a handler in another module, you can do
 something like this:
 
 ```python
->>> import loglib
+>>> import eventlib
 >>>
->>> @loglib.handler('api.ApiCall')
+>>> @eventlib.handler('api.ApiCall')
 ... def call_3rd_party_api(event):
 ...     api_key = event.data('api_key')
 ...     res = requests.get(settings.THIRDPARTYAPI_URL.format(api_key))
@@ -112,17 +114,16 @@ Please notice that handlers declared as methods will always be called
 
 ### Data validation
 
-Events are added to a queue before
-being processed. It's a long road from calling the `log()` function to
-actually using the data passed to it. So, instead of allowing the log
-processor to start all the steps of serialization, sending,
-deserialization and so on, this API provides a way to validate the data
-that the log expects. This validation will be called when
-the task runs. Here's the way to validate your event's data:
+Events are added to a queue before being processed. It's a long road
+from calling the `log()` function to actually using the data passed to
+it. So, instead of allowing the log processor to start all the steps of
+serialization, sending, deserialization and so on, this API provides a
+way to validate the data that the log expects. This validation will be
+called when the task runs. Here's the way to validate your event's data:
 
 ```python
->>> import loglib
->>> class MyEvent(loglib.BaseEvent):
+>>> import eventlib
+>>> class MyEvent(eventlib.BaseEvent):
 ...     def clean(self):
 ...         required_keys = 'deal_id', 'user_id', 'code'
 ...         missing_keys = []
@@ -130,7 +131,7 @@ the task runs. Here's the way to validate your event's data:
 ...             if not key in self.data:
 ...                 missing_keys.append(key)
 ...         if missing_keys:
-...             raise loglib.ValidationError(
+...             raise eventlib.ValidationError(
 ...                 'The following keys are missing: {}'.format(
 ...                     ', '.join(missing_keys)))
 ```
@@ -162,33 +163,32 @@ Behind the scenes, things are something like this:
 Events can take any kind of parameter serializable by the `json.dumps`
 function. If you are willing to pass parameters that are not supported
 by this library by default, you will need to refer to the
-[RFC-00003-extensible-serialization](https://github.com/Yipit/yipit/blob/dev/docs/rfc/RFC00003-extensible-serialization.md)
-document.
+[extensible-serialization](docs/extensible-serialization.md) document.
 
 ## Events are not immediately processed
 
 As we don't want to compromise the performance of our main application
 with something secondary like logging, this spec also demands that all
-logging  should run in separate tasks dispatched through celery.
+logging should run in separate tasks dispatched through celery.
 
 The flow is like this:
 
 <pre>
-     ------------------
-    | event.log() call |
-     ------------------
+     ---------------------
+    | eventlib.log() call |
+     ---------------------
          \ -----------------
           | serialize(data) |
            -----------------
                 \ ----------------------
                  | log_processing.delay |
                 / ----------------------
-           ------------------
+           -------------------
           | deserialize(data) |
          / -------------------
-     ----------------------
-    | loglib.process(data) |
-     ----------------------
+     ------------------------
+    | eventlib.process(data) |
+     ------------------------
 </pre>
 
 ### Handlers should fail gracefully
@@ -197,8 +197,8 @@ There can be a list of different handlers to execute in the same event
 processing and we must ensure that if one of these handlers fail, the
 other ones will have their chance to try. This way, the `process()`
 functions should iterate over all registered handlers for that event
-taking care to handle any error _and_ log it with
-the default python `logging` module. Something like this:
+taking care to handle any error _and_ log it with the default python
+`logging` module. Something like this:
 
 ```
 >>> handlers = self.registered_handlers()
