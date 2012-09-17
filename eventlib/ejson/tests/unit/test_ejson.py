@@ -73,7 +73,7 @@ def test_serialization_with_custom_object():
     def serialize_person(instance):
         return {"name": instance.name, "age": instance.age}
     ejson.dumps(value).should.be.equals(
-        '{"__class__": "loglib.ejson.tests.unit.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
+        '{"__class__": "eventlib.ejson.tests.unit.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
 
 
 def test_deserialization_registry():
@@ -114,7 +114,7 @@ def test_auto_deserialization():
         return Person(data['name'], data['age'])
 
     person = ejson.loads(
-        '{"__class__": "loglib.ejson.tests.unit.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
+        '{"__class__": "eventlib.ejson.tests.unit.test_ejson.Person", "__value__": {"age": 25, "name": "Lincoln"}}')
     person.should.be.a(Person)
     person.name.should.be.equals('Lincoln')
     person.age.should.be.equals(25)
@@ -128,8 +128,8 @@ def test_deserialization_with_no_objects_registered():
         "There is no deserializer registered to handle instances of 'Person'")
 
 
-@patch('loglib.ejson.import_module')
-@patch('loglib.ejson.deserialize')
+@patch('eventlib.ejson.import_module')
+@patch('eventlib.ejson.deserialize')
 def test_internal_convert_from(deserialize, import_module):
     (u'Making sure that the _convert_from function can find the right '
      u'module/class described by the dotted notation in the "__class__" key')
@@ -148,8 +148,8 @@ def test_internal_convert_from(deserialize, import_module):
         mymodule.MyClass, {'name': 'Neil A.'})
 
 
-@patch('loglib.ejson.import_module')
-@patch('loglib.ejson.deserialize')
+@patch('eventlib.ejson.import_module')
+@patch('eventlib.ejson.deserialize')
 def test_internal_convert_from_with_normal_values(deserialize, import_module):
     (u'Making sure that the _convert_from function can handle values without '
      u'the __class__/__value__ special keys')

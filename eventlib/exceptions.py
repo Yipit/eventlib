@@ -1,4 +1,4 @@
-"""Holds all exceptions used in the loglib api"""
+"""Holds all exceptions used in the eventlib api"""
 
 
 __all__ = (

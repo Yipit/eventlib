@@ -1,7 +1,7 @@
 """implementation of the RFC00001-event-log-spec proposal"""
 
 # imports to get serializers registered
-import loglib.serializers  # pyflakes:ignore
+import eventlib.serializers  # pyflakes:ignore
 
 import logging
 from importlib import import_module
