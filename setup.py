@@ -15,8 +15,10 @@
 
 from setuptools import setup, find_packages
 
+import eventlib
+
 setup(
     name="eventlib",
-    version="0.0.1",
+    version=eventlib.__version__,
     packages=find_packages(),
 )

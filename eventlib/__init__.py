@@ -31,6 +31,8 @@ from exceptions import (
     ValidationError, EventNotFoundError, InvalidEventNameError
 )
 
+__version__ = '0.0.2'
+
 __all__ = (
     'BaseEvent', 'handler', 'log',
     'ValidationError', 'EventNotFound', 'InvalidEventNameError',
