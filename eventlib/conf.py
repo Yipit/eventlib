@@ -21,6 +21,18 @@
 
 """Holds configuration values for the eventlib"""
 
-DEVELOPMENT = True
+import os
+
+DEBUG = True
 
 LOCAL_GEOLOCATION_IP = ''
+
+
+# Django compatibility layer
+
+if 'DJANGO_SETTINGS_MODULE' in os.environ:
+    from django.conf import settings
+
+    DEBUG = getattr(settings, "EVENTLIB_DEBUG", DEBUG)
+    LOCAL_GEOLOCATION_IP = getattr(
+        settings, "EVENTLIB_LOCAL_GEOLOCATION_IP", LOCAL_GEOLOCATION_IP)

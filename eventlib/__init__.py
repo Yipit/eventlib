@@ -188,7 +188,7 @@ def log(name, data=None):
     data = ejson.dumps(data)        # TypeError
 
     # We don't use celery when developing
-    if conf.DEVELOPMENT:
+    if conf.DEBUG:
         process(name, data)
     else:
         process.delay(name, data)
@@ -281,7 +281,7 @@ def process(event_name, data):
             logger.warning(
                 (u'One of the handlers for the event "{}" has failed with the '
                  u'following exception: {}').format(event_name, str(exc)))
-            if conf.DEVELOPMENT:
+            if conf.DEBUG:
                 raise exc
 
 
