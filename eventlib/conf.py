@@ -27,6 +27,6 @@ LOCAL_GEOLOCATION_IP = ''
 if 'DJANGO_SETTINGS_MODULE' in os.environ:
     from django.conf import settings
 
-    DEBUG = getattr(settings, "EVENTLIB_DEBUG", DEBUG)
+    DEBUG = getattr(settings, "DEBUG", DEBUG)
     LOCAL_GEOLOCATION_IP = getattr(
-        settings, "EVENTLIB_LOCAL_GEOLOCATION_IP", LOCAL_GEOLOCATION_IP)
+        settings, "LOCAL_GEOLOCATION_IP", LOCAL_GEOLOCATION_IP)
