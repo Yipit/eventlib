@@ -163,7 +163,8 @@ Behind the scenes, things are something like this:
 Events can take any kind of parameter serializable by the `json.dumps`
 function. If you are willing to pass parameters that are not supported
 by this library by default, you will need to refer to the
-[extensible-serialization](docs/extensible-serialization.md) document.
+[extensible-serialization](https://github.com/Yipit/eventlib/blob/master/docs/extensible-serialization.md)
+document.
 
 ## Events are not immediately processed
 
