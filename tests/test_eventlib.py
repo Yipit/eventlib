@@ -12,8 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-from mock import Mock, patch
+import os
+from mock import Mock, patch, call
 
 import eventlib
 from eventlib import ejson, exceptions, conf, core, tasks
@@ -281,3 +281,18 @@ def test_get_default_values_with_request(get_ip, datetime):
 def test_celery_process_wrapper(process):
     tasks.process_task('name', 'data')
     process.assert_called_once_with('name', 'data')
+
+
+@patch('django.conf.importlib')
+def test_django_integration(importlib):
+    # Given I mock django conf
+    settings = importlib.import_module.return_value
+    settings.LOCAL_GEOLOCATION_IP = 'CHUCK NORRIS'
+
+    # When I reload the eventlib conf with the django environment
+    # variable
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'LOL'
+    reload(conf)
+
+    # Then it should contain the mocked values
+    conf.LOCAL_GEOLOCATION_IP.should.equal('CHUCK NORRIS')
