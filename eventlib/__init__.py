@@ -18,40 +18,26 @@
 # imports to get serializers registered
 import eventlib.serializers  # pyflakes:ignore
 
-import logging
-from importlib import import_module
-from datetime import datetime
-from collections import OrderedDict
-from celery.task import task
-
-from .util import get_ip
 from . import ejson
 from . import conf
-from exceptions import (
-    ValidationError, EventNotFoundError, InvalidEventNameError
-)
+from . import core
+from .tasks import process_task
+from .exceptions import ValidationError
+
 
 __version__ = '0.0.2'
 
 __all__ = (
     'BaseEvent', 'handler', 'log',
-    'ValidationError', 'EventNotFound', 'InvalidEventNameError',
 )
-
-
-HANDLER_REGISTRY = OrderedDict()
-
-HANDLER_METHOD_REGISTRY = []
-
-logger = logging.getLogger('event')
 
 
 def _register_handler(event, fun):
     """Register a function to be an event handler"""
-    if event in HANDLER_REGISTRY:
-        HANDLER_REGISTRY[event].append(fun)
+    if event in core.HANDLER_REGISTRY:
+        core.HANDLER_REGISTRY[event].append(fun)
     else:
-        HANDLER_REGISTRY[event] = [fun]
+        core.HANDLER_REGISTRY[event] = [fun]
     return fun
 
 
@@ -64,11 +50,11 @@ class MetaEvent(type):
         # Collecting the methods that were registered as handlers for
         # the class that we're processing right now.
         registered = \
-            [m for m in attrs.items() if m[1] in HANDLER_METHOD_REGISTRY]
+            [m for m in attrs.items() if m[1] in core.HANDLER_METHOD_REGISTRY]
 
         # Just registering the method as a handler for the current class
         for method_name, func in registered:
-            HANDLER_METHOD_REGISTRY.remove(func)
+            core.HANDLER_METHOD_REGISTRY.remove(func)
             _register_handler(newcls, getattr(newcls, method_name))
         return newcls
 
@@ -149,7 +135,7 @@ def handler(param):
     if isinstance(param, basestring):
         return lambda f: _register_handler(param, f)
     else:
-        HANDLER_METHOD_REGISTRY.append(param)
+        core.HANDLER_METHOD_REGISTRY.append(param)
         return param
 
 
@@ -175,128 +161,17 @@ def log(name, data=None):
     information.
     """
     data = data or {}
-    data.update(get_default_values(data))
+    data.update(core.get_default_values(data))
 
-    event_cls = find_event(name)    # InvalidEventNameError, EventNotFoundError
+    # InvalidEventNameError, EventNotFoundError
+    event_cls = core.find_event(name)
     event = event_cls(name, data)
     event.validate()                # ValidationError
-    data = filter_data_values(data)
+    data = core.filter_data_values(data)
     data = ejson.dumps(data)        # TypeError
 
     # We don't use celery when developing
     if conf.DEBUG:
-        process(name, data)
+        core.process(name, data)
     else:
-        process.delay(name, data)
-
-
-# ---- INTERNAL API ----
-
-
-def parse_event_name(name):
-    """Returns the python module and obj given an event name
-    """
-    try:
-        app, event = name.split('.')
-        return '{}.events'.format(app), event
-    except ValueError:
-        raise InvalidEventNameError(
-            (u'The name "{}" is invalid. '
-             u'Make sure you are using the "app.KlassName" format'
-             ).format(name))
-
-
-def find_event(name):
-    """Actually import the event represented by name
-
-    Raises the `EventNotFoundError` if it's not possible to find the
-    event class refered by `name`.
-    """
-    try:
-        module, klass = parse_event_name(name)
-        return getattr(import_module(module), klass)
-    except (ImportError, AttributeError):
-        raise EventNotFoundError(
-            ('Event "{}" not found. '
-             'Make sure you have a class called "{}" inside the "{}" '
-             'module.'.format(name, klass, module)))
-
-
-def cleanup_handlers(event=None):
-    """Remove handlers of a given `event`. If no event is informed, wipe
-    out all events registered.
-
-    Be careful!! This function is intended to help when writing tests
-    and for debugging purposes. If you call it, all handlers associated
-    to an event (or to all of them) will be disassociated. Which means
-    that you'll have to reload all modules that teclare handlers. I'm
-    sure you don't want it.
-    """
-    if event:
-        del HANDLER_REGISTRY[event]
-    else:
-        HANDLER_REGISTRY.clear()
-
-
-def find_handlers(event_name):
-    """Small halper to find all handlers associated to a given event
-
-    If the event can't be found, an empty list will be returned, since
-    this is an internal function and all validation against the event
-    name and its existence was already performed.
-    """
-    handlers = HANDLER_REGISTRY.get(find_event(event_name), [])
-    handlers.extend(HANDLER_REGISTRY.get(event_name, []))
-    return handlers
-
-
-@task
-def process(event_name, data):
-    """Iterates over the event handler registry and execute each found
-    handler.
-
-    It takes the event name and its its `data`, passing the return of
-    `ejson.loads(data)` to the found handlers.
-    """
-    deserialized = ejson.loads(data)
-    event_cls = find_event(event_name)
-    event = event_cls(event_name, deserialized)
-    try:
-        event.clean()
-    except ValidationError as exc:
-        logger.warning(
-            "The event system just got an exception while cleaning "
-            "data for the event '{}'\ndata: {}\nexc: {}".format(
-                event_name, data, str(exc)))
-        return
-
-    for handler in find_handlers(event_name):
-        try:
-            handler(deserialized)
-        except Exception as exc:
-            logger.warning(
-                (u'One of the handlers for the event "{}" has failed with the '
-                 u'following exception: {}').format(event_name, str(exc)))
-            if conf.DEBUG:
-                raise exc
-
-
-def get_default_values(data):
-    """Return all default values that an event should have"""
-    request = data.get('request')
-    result = {}
-    result['__datetime__'] = datetime.now()
-    result['__ip_address__'] = request and get_ip(request) or '0.0.0.0'
-    return result
-
-
-def filter_data_values(data):
-    """Remove special values that log function can take
-
-    There are some special values, like "request" that the `log()`
-    function can take, but they're not meant to be passed to the celery
-    task neither for the event handlers. This function filter these keys
-    and return another dict without them.
-    """
-    banned = ('request',)
-    return {key: val for key, val in data.items() if not key in banned}
+        process_task.delay(name, data)
