@@ -19,6 +19,6 @@ import eventlib
 
 setup(
     name="eventlib",
-    version=eventlib.__version__,
+    version=eventlib.version,
     packages=find_packages(),
 )
