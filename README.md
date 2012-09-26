@@ -79,6 +79,7 @@ method to your event class. Like this:
 
 ```python
 >>> import eventlib
+>>> import eventlib.core
 >>> class EmailClick(eventlib.BaseEvent):
 ...     @eventlib.handler
 ...     def increment_redis_key(self):
@@ -91,7 +92,7 @@ method to your event class. Like this:
 ...         data.pop('unused_key')
 ...         self.mysql('apps.EmailClick').save(**data)
 ...
->>> eventlib.HANDLER_REGISTRY[EmailClick]
+>>> eventlib.core.HANDLER_REGISTRY[EmailClick]
 [<unbound method EmailClick.save_to_mysql>, <unbound method EmailClick.increment_redis_key>]
 ```
 
