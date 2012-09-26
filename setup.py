@@ -20,5 +20,10 @@ import eventlib
 setup(
     name="eventlib",
     version=eventlib.version,
+    description=(
+        u'Library to make it easy to track events in python/django apps'),
+    author=u'Lincoln de Sousa',
+    author_email=u'lincoln@yipit.com',
+    url='https://github.com/Yipit/eventlib',
     packages=find_packages(),
 )
