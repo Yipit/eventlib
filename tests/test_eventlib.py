@@ -16,7 +16,7 @@
 from mock import Mock, patch
 
 import eventlib
-from eventlib import ejson, exceptions, conf, core
+from eventlib import ejson, exceptions, conf, core, tasks
 
 
 def test_parse_event_name():
@@ -243,6 +243,19 @@ def test_process_fails_gracefully(logger, find_event):
     handler.assert_called_once_with(data)
 
 
+@patch('eventlib.core.find_event')
+def test_process_raises_the_exception_when_debugging(find_event):
+    core.cleanup_handlers()
+    conf.DEBUG = True
+
+    handler_fail = Mock()
+    handler_fail.side_effect = ValueError('P0wned!!!')
+    eventlib.handler('myapp.CoolEvent')(handler_fail)
+    name, data = 'myapp.CoolEvent', ejson.dumps({'a': 1})
+    core.process.when.called_with(name, data).should.throw(
+        ValueError, 'P0wned!!!')
+
+
 def test_filter_data_values():
     core.filter_data_values({'a': 'b', 'c': 'd'}).should.be.equals(
         {'a': 'b', 'c': 'd'}
@@ -262,3 +275,9 @@ def test_get_default_values_with_request(get_ip, datetime):
         '__datetime__': 'tea time!',
         '__ip_address__': '150.164.211.1',
     })
+
+
+@patch('eventlib.tasks.process')
+def test_celery_process_wrapper(process):
+    tasks.process_task('name', 'data')
+    process.assert_called_once_with('name', 'data')
