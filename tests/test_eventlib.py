@@ -13,10 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
-from mock import Mock, patch, call
+from mock import Mock, patch
+from datetime import datetime
 
 import eventlib
-from eventlib import ejson, exceptions, conf, core, tasks
+from eventlib import ejson, exceptions, conf, core, tasks, util, serializers
 
 
 def test_parse_event_name():
@@ -145,6 +146,7 @@ def test_find_handlers_with_mixed_objects_and_strings(find_event):
 @patch('eventlib.core.process')
 @patch('eventlib.core.find_event')
 def test_log(find_event, process, datetime):
+    conf.DEBUG = True
     core.cleanup_handlers()
     datetime.now.return_value = 'tea time'
 
@@ -159,10 +161,25 @@ def test_log(find_event, process, datetime):
     process.assert_called_once_with('app.Event', ejson.dumps(data))
 
 
+@patch('eventlib.api.tasks')
+@patch('eventlib.core.find_event')
+@patch('eventlib.core.datetime')
+def test_log_when_debug_is_false(datetime, find_event, tasks):
+    conf.DEBUG = False
+    core.cleanup_handlers()
+    datetime.now.return_value = 'tea time'
+
+    eventlib.log('app.Event')
+    tasks.process_task.delay.assert_called_once_with('app.Event', ejson.dumps({
+        '__ip_address__': '0.0.0.0', '__datetime__': 'tea time',
+    }))
+
+
 @patch('eventlib.core.datetime')
 @patch('eventlib.core.process')
 @patch('eventlib.core.find_event')
 def test_log_insert_datetime(find_event, process, datetime):
+    conf.DEBUG = True
     datetime.now.return_value = 'tea time'
     data = {'name': 'Event System', 'code': 42}
     eventlib.log('app.Event', data)
@@ -296,3 +313,55 @@ def test_django_integration(importlib):
 
     # Then it should contain the mocked values
     conf.LOCAL_GEOLOCATION_IP.should.equal('CHUCK NORRIS')
+
+    # Cleaning up
+    del os.environ['DJANGO_SETTINGS_MODULE']
+
+
+def test_overriding_get_ip_helper_config():
+    # Given I overrided the local geolocation config
+    conf.LOCAL_GEOLOCATION_IP = 'my geolocation ip'
+
+    # When I call the get_ip function, then it should return the
+    # overrided value
+    util.get_ip(None).should.equal('my geolocation ip')
+
+    # Cleaning up
+    conf.LOCAL_GEOLOCATION_IP = ''
+
+
+def test_geo_ip_helper_with_an_unknown_ip():
+    # Given I have a request object with the `HTTP_X_FORWARDED_FOR`
+    # variable set to a false value
+    request = Mock()
+    request.META = {'HTTP_X_FORWARDED_FOR': ''}
+
+    # When I call the get_ip helper, it should return a default
+    # 'unknown' value
+    util.get_ip(request).should.equal('0.0.0.0')
+
+
+def test_get_ip_helper():
+    # Given I have a request object with the `HTTP_X_FORWARDED_FOR`
+    # variable set with local and remote IP addresses
+    request = Mock()
+    request.META = {
+        'HTTP_X_FORWARDED_FOR': '127.0.0.1,10.0.0.1,150.164.211.1'}
+
+    # When I call the get_ip helper, it should skip the local addresses
+    # and give me the first remote address
+    util.get_ip(request).should.equal('150.164.211.1')
+
+    # If the request only contain local addresses, the output should be
+    # the default unknown addr
+    request.META = {
+        'HTTP_X_FORWARDED_FOR': '127.0.0.1,10.0.0.1,10.1.1.25'}
+    util.get_ip(request).should.equal('0.0.0.0')
+
+
+def test_date_serializer_and_unserializer():
+    my_date = datetime(2012, 9, 26, 14, 31)
+    serializers.serialize_datetime(my_date).should.equal(
+        '2012-09-26T14:31:00')
+    serializers.deserialize_datetime('2012-09-26T14:31:00').should.equal(
+        my_date)

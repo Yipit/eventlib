@@ -19,6 +19,15 @@ UNKNOWN_IP = '0.0.0.0'
 
 
 def get_ip(request):
+    """Return the IP address inside the HTTP_X_FORWARDED_FOR var inside
+    the `request` object.
+
+    The return of this function can be overrided by the
+    `LOCAL_GEOLOCATION_IP` variable in the `conf` module.
+
+    This function will skip local IPs (starting with 10. and equals to
+    127.0.0.1).
+    """
     if conf.LOCAL_GEOLOCATION_IP:
         return conf.LOCAL_GEOLOCATION_IP
 

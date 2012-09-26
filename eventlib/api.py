@@ -18,7 +18,7 @@
 from . import ejson
 from . import conf
 from . import core
-from .tasks import process_task
+from . import tasks
 from .exceptions import ValidationError
 
 
@@ -164,4 +164,4 @@ def log(name, data=None):
     if conf.DEBUG:
         core.process(name, data)
     else:
-        process_task.delay(name, data)
+        tasks.process_task.delay(name, data)
