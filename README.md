@@ -1,4 +1,5 @@
 # Event API spec
+[![Build Status](https://secure.travis-ci.org/Yipit/eventlib.png)](http://travis-ci.org/Yipit/eventlib)
 
 This is an attempt to specify a generic, but flexible way to log events
 in our codebase. There are two public APIs.
