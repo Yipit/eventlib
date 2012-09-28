@@ -14,16 +14,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup, find_packages
+from pkg_resources import require
 
-import eventlib
 
-setup(
-    name="eventlib",
-    version=eventlib.version,
-    description=(
-        u'Library to make it easy to track events in python/django apps'),
-    author=u'Lincoln de Sousa',
-    author_email=u'lincoln@yipit.com',
-    url='https://github.com/Yipit/eventlib',
-    packages=find_packages(),
-)
+if __name__ == '__main__':
+    setup(
+        name="eventlib",
+        version=require('eventlib')[0].version,
+        description=(
+            u'Library to make it easy to track events in python/django apps'),
+        author=u'Lincoln de Sousa',
+        author_email=u'lincoln@yipit.com',
+        url='https://github.com/Yipit/eventlib',
+        packages=find_packages(),
+    )
