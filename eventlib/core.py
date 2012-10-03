@@ -180,5 +180,3 @@ def import_event_modules():
             import_module(module_name)
         except ImportError:
             pass
-
-import_event_modules()
