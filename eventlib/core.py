@@ -18,8 +18,10 @@
 
 import logging
 from collections import OrderedDict
-from importlib import import_module
 from datetime import datetime
+from importlib import import_module
+
+from django.conf import settings
 
 from . import conf
 from .util import get_ip
@@ -34,6 +36,8 @@ EXTERNAL_HANDLER_REGISTRY = OrderedDict()
 
 HANDLER_METHOD_REGISTRY = []
 
+EVENTS_MODULE_NAME = 'events'
+
 logger = logging.getLogger('event')
 
 
@@ -42,7 +46,7 @@ def parse_event_name(name):
     """
     try:
         app, event = name.split('.')
-        return '{}.events'.format(app), event
+        return '{}.{}'.format(app, EVENTS_MODULE_NAME), event
     except ValueError:
         raise InvalidEventNameError(
             (u'The name "{}" is invalid. '
@@ -167,3 +171,14 @@ def filter_data_values(data):
     """
     banned = ('request',)
     return {key: val for key, val in data.items() if not key in banned}
+
+
+def import_event_modules():
+    for installed_app in settings.INSTALLED_APPS:
+        module_name = u'{}.{}'.format(installed_app, EVENTS_MODULE_NAME)
+        try:
+            import_module(module_name)
+        except ImportError:
+            pass
+
+import_event_modules()
