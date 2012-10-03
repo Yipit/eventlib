@@ -95,8 +95,7 @@ def find_handlers(event_name):
 
 
 def find_external_handlers(event_name):
-    handlers = EXTERNAL_HANDLER_REGISTRY.get(find_event(event_name), [])
-    handlers.extend(EXTERNAL_HANDLER_REGISTRY.get(event_name, []))
+    handlers = EXTERNAL_HANDLER_REGISTRY.get(event_name, [])
     return handlers
 
 
