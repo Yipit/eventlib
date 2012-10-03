@@ -30,6 +30,7 @@ from .exceptions import (
 
 
 HANDLER_REGISTRY = OrderedDict()
+EXTERNAL_HANDLER_REGISTRY = OrderedDict()
 
 HANDLER_METHOD_REGISTRY = []
 
@@ -93,6 +94,12 @@ def find_handlers(event_name):
     return handlers
 
 
+def find_external_handlers(event_name):
+    handlers = EXTERNAL_HANDLER_REGISTRY.get(find_event(event_name), [])
+    handlers.extend(EXTERNAL_HANDLER_REGISTRY.get(event_name, []))
+    return handlers
+
+
 def process(event_name, data):
     """Iterates over the event handler registry and execute each found
     handler.
@@ -115,6 +122,25 @@ def process(event_name, data):
     for handler in find_handlers(event_name):
         try:
             handler(deserialized)
+        except Exception as exc:
+            logger.warning(
+                (u'One of the handlers for the event "{}" has failed with the '
+                 u'following exception: {}').format(event_name, str(exc)))
+            if conf.DEBUG:
+                raise exc
+    event._broadcast()
+
+
+def process_external(event_name, data):
+    """Iterates over the event handler registry and execute each found
+    handler.
+
+    It takes the event name and its its `data`, passing the return of
+    `ejson.loads(data)` to the found handlers.
+    """
+    for handler in find_external_handlers(event_name):
+        try:
+            handler(data)
         except Exception as exc:
             logger.warning(
                 (u'One of the handlers for the event "{}" has failed with the '

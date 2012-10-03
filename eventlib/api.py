@@ -20,6 +20,7 @@ from . import conf
 from . import core
 from . import tasks
 from .exceptions import ValidationError
+from .util import redis_connection
 
 
 def _register_handler(event, fun):
@@ -28,6 +29,14 @@ def _register_handler(event, fun):
         core.HANDLER_REGISTRY[event].append(fun)
     else:
         core.HANDLER_REGISTRY[event] = [fun]
+    return fun
+
+
+def _register_external_handler(event, fun):
+    if event in core.EXTERNAL_HANDLER_REGISTRY:
+        core.EXTERNAL_HANDLER_REGISTRY[event].append(fun)
+    else:
+        core.EXTERNAL_HANDLER_REGISTRY[event] = [fun]
     return fun
 
 
@@ -97,6 +106,15 @@ class BaseEvent(object):
             )
         return True
 
+    def _broadcast(self):
+        data = self.broadcast(self.data)
+        client = redis_connection.get_connection()
+        data = ejson.dumps(data)
+        client.publish("eventlib", data)
+
+    def broadcast(self, data):
+        return data
+
 
 def handler(param):
     """Decorator that associates a handler to an event class
@@ -129,6 +147,14 @@ def handler(param):
         return param
 
 
+def external_handler(param):
+    if isinstance(param, basestring):
+        return lambda f: _register_external_handler(param, f)
+    else:
+        core.EXTERNAL_HANDLER_METHOD_REGISTRY.append(param)
+        return param
+
+
 def log(name, data=None):
     """Entry point for the event lib that starts the logging process
 
@@ -157,6 +183,7 @@ def log(name, data=None):
     event_cls = core.find_event(name)
     event = event_cls(name, data)
     event.validate()                # ValidationError
+    data["name"] = name
     data = core.filter_data_values(data)
     data = ejson.dumps(data)        # TypeError
 

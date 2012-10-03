@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import conf
+import redis
+from django.conf import settings
 
 UNKNOWN_IP = '0.0.0.0'
 
@@ -42,3 +44,20 @@ def get_ip(request):
             return ip
 
     return UNKNOWN_IP
+
+
+class ConnectionManager(object):
+    conn = None
+
+    def get_connection(self):
+        if self.conn:
+            return self.conn
+        redis_configs = settings.REDIS_CONNECTIONS
+        config_name = getattr(settings, 'EVENTLIB_REDIS_CONFIG_NAME', 'default')
+        config = redis_configs[config_name]
+        host = config['HOST']
+        port = config['PORT']
+        self.conn = redis.StrictRedis(host=host, port=port)
+        return self.conn
+
+redis_connection = ConnectionManager()
