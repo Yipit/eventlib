@@ -47,6 +47,8 @@ def test_get_ip_helper():
 @patch('eventlib.util.redis.StrictRedis')
 @patch('eventlib.util.settings')
 def test_redis_connect(settings, StrictRedis):
+    util.redis_connection.conn = None
+
     settings.EVENTLIB_REDIS_CONFIG_NAME = 'default'
     settings.REDIS_CONNECTIONS = {
         'default': {
@@ -57,6 +59,16 @@ def test_redis_connect(settings, StrictRedis):
 
     conn = util.redis_connection.get_connection()
     StrictRedis.assert_called_once_with(host='localhost', port=6379)
+
+    new_conn = util.redis_connection.get_connection()
+    new_conn.should.equal(conn)
+
+
+def test_no_redis_settings():
+    util.redis_connection.conn = None
+
+    conn = util.redis_connection.get_connection()
+    conn.should.equal(None)
 
     new_conn = util.redis_connection.get_connection()
     new_conn.should.equal(conn)

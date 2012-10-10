@@ -105,9 +105,11 @@ class BaseEvent(object):
     def _broadcast(self):
         data = self.broadcast(self.data)
         client = redis_connection.get_connection()
-        data['name'] = self.name
-        data = ejson.dumps(data)
-        client.publish("eventlib", data)
+        if client:
+            # If not redis client, don't broadcast
+            data['name'] = self.name
+            data = ejson.dumps(data)
+            client.publish("eventlib", data)
 
     def broadcast(self, data):
         return data

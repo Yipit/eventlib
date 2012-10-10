@@ -52,12 +52,15 @@ class ConnectionManager(object):
     def get_connection(self):
         if self.conn:
             return self.conn
-        redis_configs = settings.REDIS_CONNECTIONS
-        config_name = getattr(settings, 'EVENTLIB_REDIS_CONFIG_NAME', 'default')
-        config = redis_configs[config_name]
-        host = config['HOST']
-        port = config['PORT']
-        self.conn = redis.StrictRedis(host=host, port=port)
+        redis_configs = getattr(settings, 'REDIS_CONNECTIONS', None)
+        if redis_configs:
+            config_name = getattr(settings, 'EVENTLIB_REDIS_CONFIG_NAME', 'default')
+            config = redis_configs[config_name]
+            host = config['HOST']
+            port = config['PORT']
+            self.conn = redis.StrictRedis(host=host, port=port)
+        else:
+            self.conn = None
         return self.conn
 
 redis_connection = ConnectionManager()
