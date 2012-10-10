@@ -1,9 +1,7 @@
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from eventlib.core import process_external, import_event_modules
 from eventlib.ejson import loads
-from eventlib.exceptions import EventNotFoundError
 from eventlib.util import redis_connection
 
 

@@ -20,7 +20,7 @@ from pkg_resources import require
 if __name__ == '__main__':
     setup(
         name="eventlib",
-        version="0.0.3",#require('eventlib')[0].version,
+        version=require('eventlib')[0].version,
         description=(
             u'Library to make it easy to track events in python/django apps'),
         author=u'Lincoln de Sousa',
