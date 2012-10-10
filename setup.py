@@ -27,4 +27,9 @@ if __name__ == '__main__':
         author_email=u'lincoln@yipit.com',
         url='https://github.com/Yipit/eventlib',
         packages=find_packages(),
+        entry_points={
+            'console_scripts': [
+                'eventlib = eventlib.runner:main',
+            ],
+        },
     )

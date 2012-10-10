@@ -17,11 +17,11 @@
 
 # Imports to register and expose things in the "eventlib" namespace.
 import eventlib.serializers               # pyflakes:ignore
-from .api import log, handler, BaseEvent  # pyflakes: ignore
+from .api import log, handler, external_handler, BaseEvent  # pyflakes: ignore
 
 
 __version__ = '0.0.3'
 
 __all__ = (
-    'BaseEvent', 'handler', 'log',
+    'BaseEvent', 'handler', 'external_handler', 'log',
 )

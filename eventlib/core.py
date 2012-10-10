@@ -18,8 +18,10 @@
 
 import logging
 from collections import OrderedDict
-from importlib import import_module
 from datetime import datetime
+from importlib import import_module
+
+from django.conf import settings
 
 from . import conf
 from .util import get_ip
@@ -30,8 +32,11 @@ from .exceptions import (
 
 
 HANDLER_REGISTRY = OrderedDict()
+EXTERNAL_HANDLER_REGISTRY = OrderedDict()
 
 HANDLER_METHOD_REGISTRY = []
+
+EVENTS_MODULE_NAME = 'events'
 
 logger = logging.getLogger('event')
 
@@ -41,7 +46,7 @@ def parse_event_name(name):
     """
     try:
         app, event = name.split('.')
-        return '{}.events'.format(app), event
+        return '{}.{}'.format(app, EVENTS_MODULE_NAME), event
     except ValueError:
         raise InvalidEventNameError(
             (u'The name "{}" is invalid. '
@@ -76,9 +81,13 @@ def cleanup_handlers(event=None):
     sure you don't want it.
     """
     if event:
-        del HANDLER_REGISTRY[event]
+        if event in HANDLER_REGISTRY:
+            del HANDLER_REGISTRY[event]
+        if event in EXTERNAL_HANDLER_REGISTRY:
+            del EXTERNAL_HANDLER_REGISTRY[event]
     else:
         HANDLER_REGISTRY.clear()
+        EXTERNAL_HANDLER_REGISTRY.clear()
 
 
 def find_handlers(event_name):
@@ -90,6 +99,11 @@ def find_handlers(event_name):
     """
     handlers = HANDLER_REGISTRY.get(find_event(event_name), [])
     handlers.extend(HANDLER_REGISTRY.get(event_name, []))
+    return handlers
+
+
+def find_external_handlers(event_name):
+    handlers = EXTERNAL_HANDLER_REGISTRY.get(event_name, [])
     return handlers
 
 
@@ -121,6 +135,26 @@ def process(event_name, data):
                  u'following exception: {}').format(event_name, str(exc)))
             if conf.DEBUG:
                 raise exc
+    event._broadcast()
+
+
+def process_external(event_name, data):
+    """Iterates over the event handler registry and execute each found
+    handler.
+
+    It takes the event name and its its `data`, passing the return of
+    `ejson.loads(data)` to the found handlers.
+    """
+    deserialized = loads(data)
+    for handler in find_external_handlers(event_name):
+        try:
+            handler(deserialized)
+        except Exception as exc:
+            logger.warning(
+                (u'One of the handlers for the event "{}" has failed with the '
+                 u'following exception: {}').format(event_name, str(exc)))
+            if conf.DEBUG:
+                raise exc
 
 
 def get_default_values(data):
@@ -142,3 +176,12 @@ def filter_data_values(data):
     """
     banned = ('request',)
     return {key: val for key, val in data.items() if not key in banned}
+
+
+def import_event_modules():
+    for installed_app in settings.INSTALLED_APPS:
+        module_name = u'{}.{}'.format(installed_app, EVENTS_MODULE_NAME)
+        try:
+            import_module(module_name)
+        except ImportError:
+            pass

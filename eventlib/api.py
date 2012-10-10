@@ -20,14 +20,19 @@ from . import conf
 from . import core
 from . import tasks
 from .exceptions import ValidationError
+from .util import redis_connection
 
 
-def _register_handler(event, fun):
+def _register_handler(event, fun, external=False):
     """Register a function to be an event handler"""
-    if event in core.HANDLER_REGISTRY:
-        core.HANDLER_REGISTRY[event].append(fun)
+    registry = core.HANDLER_REGISTRY
+    if external:
+        registry = core.EXTERNAL_HANDLER_REGISTRY
+
+    if event in registry:
+        registry[event].append(fun)
     else:
-        core.HANDLER_REGISTRY[event] = [fun]
+        registry[event] = [fun]
     return fun
 
 
@@ -97,6 +102,18 @@ class BaseEvent(object):
             )
         return True
 
+    def _broadcast(self):
+        data = self.broadcast(self.data)
+        client = redis_connection.get_connection()
+        if client:
+            # If not redis client, don't broadcast
+            data['name'] = self.name
+            data = ejson.dumps(data)
+            client.publish("eventlib", data)
+
+    def broadcast(self, data):
+        return data
+
 
 def handler(param):
     """Decorator that associates a handler to an event class
@@ -127,6 +144,10 @@ def handler(param):
     else:
         core.HANDLER_METHOD_REGISTRY.append(param)
         return param
+
+
+def external_handler(param):
+    return lambda f: _register_handler(param, f, external=True)
 
 
 def log(name, data=None):
