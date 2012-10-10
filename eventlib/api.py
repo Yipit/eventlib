@@ -110,6 +110,7 @@ class BaseEvent(object):
         data = self.broadcast(self.data)
         client = redis_connection.get_connection()
         data = ejson.dumps(data)
+        data['name'] = self.name
         client.publish("eventlib", data)
 
     def broadcast(self, data):
@@ -183,7 +184,6 @@ def log(name, data=None):
     event_cls = core.find_event(name)
     event = event_cls(name, data)
     event.validate()                # ValidationError
-    data["name"] = name
     data = core.filter_data_values(data)
     data = ejson.dumps(data)        # TypeError
 
