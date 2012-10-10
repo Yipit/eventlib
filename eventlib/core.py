@@ -81,9 +81,13 @@ def cleanup_handlers(event=None):
     sure you don't want it.
     """
     if event:
-        del HANDLER_REGISTRY[event]
+        if event in HANDLER_REGISTRY:
+            del HANDLER_REGISTRY[event]
+        if event in EXTERNAL_HANDLER_REGISTRY:
+            del EXTERNAL_HANDLER_REGISTRY[event]
     else:
         HANDLER_REGISTRY.clear()
+        EXTERNAL_HANDLER_REGISTRY.clear()
 
 
 def find_handlers(event_name):
@@ -141,9 +145,10 @@ def process_external(event_name, data):
     It takes the event name and its its `data`, passing the return of
     `ejson.loads(data)` to the found handlers.
     """
+    deserialized = loads(data)
     for handler in find_external_handlers(event_name):
         try:
-            handler(data)
+            handler(deserialized)
         except Exception as exc:
             logger.warning(
                 (u'One of the handlers for the event "{}" has failed with the '

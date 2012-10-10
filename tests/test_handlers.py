@@ -28,6 +28,17 @@ def test_handler_with_methods():
     core.HANDLER_REGISTRY[MyEvent].should.be.equals([MyEvent.handle_stuff])
 
 
+def test_external_handler_with_methods():
+    core.cleanup_handlers()
+
+    @eventlib.external_handler('stuff.Klass')
+    def handle_stuff(self):
+        pass
+
+    core.EXTERNAL_HANDLER_REGISTRY.should.have.length_of(1)
+    core.EXTERNAL_HANDLER_REGISTRY['stuff.Klass'].should.be.equals([handle_stuff])
+
+
 def test_handler_registry_cleanup():
     core.cleanup_handlers()
     core.HANDLER_REGISTRY.should.have.length_of(0)
@@ -40,16 +51,29 @@ def test_handler_registry_cleanup():
     def do_another_nothing(data):
         return 0
 
+    @eventlib.external_handler('stuff.Foobar')
+    def do_more_nothing(data):
+        return 0
+
     core.HANDLER_REGISTRY.should.have.length_of(2)
     core.HANDLER_REGISTRY['stuff.Klass'].should.be.equals([do_nothing])
     core.HANDLER_REGISTRY['stuff.Blah'].should.be.equals([do_another_nothing])
 
+    core.EXTERNAL_HANDLER_REGISTRY.should.have.length_of(1)
+    core.EXTERNAL_HANDLER_REGISTRY['stuff.Foobar'].should.be.equals([do_more_nothing])
+
     core.cleanup_handlers('stuff.Klass')
-    dict(core.HANDLER_REGISTRY).should.be.equals(
-        {'stuff.Blah': [do_another_nothing]})
+    dict(core.HANDLER_REGISTRY).should.be.equals({
+        'stuff.Blah': [do_another_nothing],
+    })
+
+    dict(core.EXTERNAL_HANDLER_REGISTRY).should.be.equals({
+        'stuff.Foobar': [do_more_nothing],
+    })
 
     core.cleanup_handlers()
     core.HANDLER_REGISTRY.should.have.length_of(0)
+    core.EXTERNAL_HANDLER_REGISTRY.should.have.length_of(0)
 
 
 @patch('eventlib.core.find_event')
@@ -72,7 +96,13 @@ def test_find_handlers(find_event):
     core.find_handlers('app.Event').should.be.equals([stuff, other_stuff])
     core.find_handlers('app.Event2').should.be.equals([more_stuff])
 
+    @eventlib.external_handler('app2.Event')
+    def still_more_stuff(data):
+        return 3
+    core.find_external_handlers('app2.Event').should.be.equals([still_more_stuff])
+
     core.find_handlers('dont.Exist').should.be.equal([])
+    core.find_external_handlers('dont.Exist').should.be.equal([])
 
 
 @patch('eventlib.core.find_event')

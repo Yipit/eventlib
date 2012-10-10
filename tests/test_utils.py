@@ -1,4 +1,4 @@
-from mock import Mock
+from mock import Mock, patch
 
 from eventlib import conf, util
 
@@ -42,3 +42,21 @@ def test_get_ip_helper():
     request.META = {
         'HTTP_X_FORWARDED_FOR': '127.0.0.1,10.0.0.1,10.1.1.25'}
     util.get_ip(request).should.equal('0.0.0.0')
+
+
+@patch('eventlib.util.redis.StrictRedis')
+@patch('eventlib.util.settings')
+def test_redis_connect(settings, StrictRedis):
+    settings.EVENTLIB_REDIS_CONFIG_NAME = 'default'
+    settings.REDIS_CONNECTIONS = {
+        'default': {
+            'HOST': 'localhost',
+            'PORT': 6379,
+        },
+    }
+
+    conn = util.redis_connection.get_connection()
+    StrictRedis.assert_called_once_with(host='localhost', port=6379)
+
+    new_conn = util.redis_connection.get_connection()
+    new_conn.should.equal(conn)

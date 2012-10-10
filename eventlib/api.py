@@ -23,20 +23,16 @@ from .exceptions import ValidationError
 from .util import redis_connection
 
 
-def _register_handler(event, fun):
+def _register_handler(event, fun, external=False):
     """Register a function to be an event handler"""
-    if event in core.HANDLER_REGISTRY:
-        core.HANDLER_REGISTRY[event].append(fun)
-    else:
-        core.HANDLER_REGISTRY[event] = [fun]
-    return fun
+    registry = core.HANDLER_REGISTRY
+    if external:
+        registry = core.EXTERNAL_HANDLER_REGISTRY
 
-
-def _register_external_handler(event, fun):
-    if event in core.EXTERNAL_HANDLER_REGISTRY:
-        core.EXTERNAL_HANDLER_REGISTRY[event].append(fun)
+    if event in registry:
+        registry[event].append(fun)
     else:
-        core.EXTERNAL_HANDLER_REGISTRY[event] = [fun]
+        registry[event] = [fun]
     return fun
 
 
@@ -109,8 +105,8 @@ class BaseEvent(object):
     def _broadcast(self):
         data = self.broadcast(self.data)
         client = redis_connection.get_connection()
-        data = ejson.dumps(data)
         data['name'] = self.name
+        data = ejson.dumps(data)
         client.publish("eventlib", data)
 
     def broadcast(self, data):
@@ -149,11 +145,7 @@ def handler(param):
 
 
 def external_handler(param):
-    if isinstance(param, basestring):
-        return lambda f: _register_external_handler(param, f)
-    else:
-        core.EXTERNAL_HANDLER_METHOD_REGISTRY.append(param)
-        return param
+    return lambda f: _register_handler(param, f, external=True)
 
 
 def log(name, data=None):

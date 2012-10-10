@@ -13,10 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
-from mock import Mock, patch
+from mock import Mock, call, patch
 from datetime import datetime
 
-import eventlib
 from eventlib import exceptions, conf, core, tasks, serializers
 
 
@@ -49,21 +48,6 @@ def test_find_event(import_module):
         exceptions.EventNotFoundError,
         'Event "app.Event2" not found. Make sure you have a class '
         'called "Event2" inside the "app.events" module.')
-
-
-def test_event_validate():
-    class MyEvent(eventlib.BaseEvent):
-        pass
-
-    data = {'name': 'Lincoln', 'age': 25, 'answer': 42}
-    event = MyEvent('stuff', data)
-
-    assert event.validate_keys('name', 'age')
-
-    event.validate_keys.when.called_with('unknown', 'blah').should.throw(
-        exceptions.ValidationError,
-        'One of the following keys are missing from the event\'s data: '
-        'unknown, blah')
 
 
 def test_filter_data_values():
@@ -117,3 +101,17 @@ def test_date_serializer_and_unserializer():
         '2012-09-26T14:31:00')
     serializers.deserialize_datetime('2012-09-26T14:31:00').should.equal(
         my_date)
+
+
+@patch('eventlib.core.settings')
+@patch('eventlib.core.import_module')
+def test_importing_events(import_module, settings):
+    settings.INSTALLED_APPS = ['foobar', 'test_app']
+
+    core.import_event_modules()
+    calls = [call('foobar.events'), call('test_app.events')]
+    import_module.assert_has_calls(calls)
+
+    settings.INSTALLED_APPS = ['tester']
+    import_module.side_effect = ImportError('P0wned!!!')
+    core.import_event_modules()
