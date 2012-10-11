@@ -10,7 +10,7 @@ install_deps:
 
 test:
 	@echo "running python tests..."
-	@nosetests --verbosity=2 tests
+	@nosetests --verbosity=2 -sd tests
 	@echo "running documentation examples..."
 	@steadymark README.md
 
