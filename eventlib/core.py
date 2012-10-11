@@ -21,9 +21,7 @@ from collections import OrderedDict
 from datetime import datetime
 from importlib import import_module
 
-from django.conf import settings
-
-from . import conf
+from .conf import getsetting
 from .util import get_ip
 from .ejson import loads
 from .exceptions import (
@@ -133,7 +131,7 @@ def process(event_name, data):
             logger.warning(
                 (u'One of the handlers for the event "{}" has failed with the '
                  u'following exception: {}').format(event_name, str(exc)))
-            if conf.DEBUG:
+            if getsetting('DEBUG'):
                 raise exc
     event._broadcast()
 
@@ -153,7 +151,7 @@ def process_external(event_name, data):
             logger.warning(
                 (u'One of the handlers for the event "{}" has failed with the '
                  u'following exception: {}').format(event_name, str(exc)))
-            if conf.DEBUG:
+            if getsetting('DEBUG'):
                 raise exc
 
 
@@ -179,7 +177,12 @@ def filter_data_values(data):
 
 
 def import_event_modules():
-    for installed_app in settings.INSTALLED_APPS:
+    """Import all events declared for all currently installed apps
+
+    This function walks through the list of installed apps and tries to
+    import a module named `EVENTS_MODULE_NAME`.
+    """
+    for installed_app in getsetting('INSTALLED_APPS'):
         module_name = u'{}.{}'.format(installed_app, EVENTS_MODULE_NAME)
         try:
             import_module(module_name)

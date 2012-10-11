@@ -1,21 +1,22 @@
 from mock import Mock, patch
 
-from eventlib import conf, util
+from eventlib import util
 
 
-def test_overriding_get_ip_helper_config():
+@patch('eventlib.conf.settings')
+def test_overriding_get_ip_helper_config(settings):
     # Given I overrided the local geolocation config
-    conf.LOCAL_GEOLOCATION_IP = 'my geolocation ip'
+    settings.LOCAL_GEOLOCATION_IP = 'my geolocation ip'
 
     # When I call the get_ip function, then it should return the
     # overrided value
     util.get_ip(None).should.equal('my geolocation ip')
 
-    # Cleaning up
-    conf.LOCAL_GEOLOCATION_IP = ''
 
+@patch('eventlib.conf.settings')
+def test_geo_ip_helper_with_an_unknown_ip(settings):
+    settings.LOCAL_GEOLOCATION_IP = None
 
-def test_geo_ip_helper_with_an_unknown_ip():
     # Given I have a request object with the `HTTP_X_FORWARDED_FOR`
     # variable set to a false value
     request = Mock()
@@ -26,7 +27,10 @@ def test_geo_ip_helper_with_an_unknown_ip():
     util.get_ip(request).should.equal('0.0.0.0')
 
 
-def test_get_ip_helper():
+@patch('eventlib.conf.settings')
+def test_get_ip_helper(settings):
+    settings.LOCAL_GEOLOCATION_IP = None
+
     # Given I have a request object with the `HTTP_X_FORWARDED_FOR`
     # variable set with local and remote IP addresses
     request = Mock()
@@ -45,7 +49,7 @@ def test_get_ip_helper():
 
 
 @patch('eventlib.util.redis.StrictRedis')
-@patch('eventlib.util.settings')
+@patch('eventlib.conf.settings')
 def test_redis_connect(settings, StrictRedis):
     util.redis_connection.conn = None
 
@@ -64,7 +68,11 @@ def test_redis_connect(settings, StrictRedis):
     new_conn.should.equal(conn)
 
 
-def test_no_redis_settings():
+@patch('eventlib.conf.settings')
+def test_no_redis_settings(settings):
+    settings.EVENTLIB_REDIS_CONFIG_NAME = None
+    settings.REDIS_CONNECTIONS = None
+
     util.redis_connection.conn = None
 
     conn = util.redis_connection.get_connection()

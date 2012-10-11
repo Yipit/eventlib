@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import conf
 import redis
-from django.conf import settings
+from .conf import getsetting
+
 
 UNKNOWN_IP = '0.0.0.0'
 
@@ -30,8 +30,8 @@ def get_ip(request):
     This function will skip local IPs (starting with 10. and equals to
     127.0.0.1).
     """
-    if conf.LOCAL_GEOLOCATION_IP:
-        return conf.LOCAL_GEOLOCATION_IP
+    if getsetting('LOCAL_GEOLOCATION_IP'):
+        return getsetting('LOCAL_GEOLOCATION_IP')
 
     forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
 
@@ -47,14 +47,33 @@ def get_ip(request):
 
 
 class ConnectionManager(object):
+    """Helper redis connector"""
+
     conn = None
 
     def get_connection(self):
+        """Return a valid redis connection based on the following settings
+
+          * `REDIS_CONNECTIONS`
+          * `EVENTLIB_REDIS_CONFIG_NAME`
+
+        The first one is a dictionary in the following format:
+
+          >>> {
+          ...   'server1': {'HOST': 'redis-server-1', 'POST': 9001},
+          ...   'server2': {'HOST': 'redis-server-2', 'POST': 9002},
+          ... ]
+
+        The second one is the name of the entry present in the above
+        dict, like `server1` or `server2`.
+        """
+
         if self.conn:
             return self.conn
-        redis_configs = getattr(settings, 'REDIS_CONNECTIONS', None)
+
+        redis_configs = getsetting('REDIS_CONNECTIONS')
         if redis_configs:
-            config_name = getattr(settings, 'EVENTLIB_REDIS_CONFIG_NAME', 'default')
+            config_name = getsetting('EVENTLIB_REDIS_CONFIG_NAME', 'default')
             config = redis_configs[config_name]
             host = config['HOST']
             port = config['PORT']

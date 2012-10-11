@@ -1,7 +1,7 @@
 from mock import Mock, patch
 
 import eventlib
-from eventlib import conf, core, ejson, exceptions
+from eventlib import core, ejson, exceptions
 
 
 @patch('eventlib.core.find_event')
@@ -55,9 +55,10 @@ def test_process_data_clean(logger, find_event):
 
 @patch('eventlib.core.find_event')
 @patch('eventlib.core.logger')
-def test_process_fails_gracefully(logger, find_event):
+@patch('eventlib.conf.settings')
+def test_process_fails_gracefully(settings, logger, find_event):
     core.cleanup_handlers()
-    conf.DEBUG = False
+    settings.DEBUG = False
 
     handler_fail = Mock()
     handler_fail.side_effect = ValueError('P0wned!!!')
@@ -78,9 +79,10 @@ def test_process_fails_gracefully(logger, find_event):
 
 @patch('eventlib.core.find_event')
 @patch('eventlib.core.logger')
-def test_process_external_fails_gracefully(logger, find_event):
+@patch('eventlib.conf.settings')
+def test_process_external_fails_gracefully(settings, logger, find_event):
     core.cleanup_handlers()
-    conf.DEBUG = False
+    settings.DEBUG = False
 
     handler_fail = Mock()
     handler_fail.side_effect = ValueError('P0wned!!!')
@@ -100,9 +102,10 @@ def test_process_external_fails_gracefully(logger, find_event):
 
 
 @patch('eventlib.core.find_event')
-def test_process_raises_the_exception_when_debugging(find_event):
+@patch('eventlib.conf.settings')
+def test_process_raises_the_exception_when_debugging(settings, find_event):
     core.cleanup_handlers()
-    conf.DEBUG = True
+    settings.DEBUG = True
 
     handler_fail = Mock()
     handler_fail.side_effect = ValueError('P0wned!!!')
@@ -113,9 +116,11 @@ def test_process_raises_the_exception_when_debugging(find_event):
 
 
 @patch('eventlib.core.find_event')
-def test_process_external_raises_the_exception_when_debugging(find_event):
+@patch('eventlib.conf.settings')
+def test_process_external_raises_the_exception_when_debugging(
+        settings, find_event):
     core.cleanup_handlers()
-    conf.DEBUG = True
+    settings.DEBUG = True
 
     handler_fail = Mock()
     handler_fail.side_effect = ValueError('P0wned!!!')

@@ -12,7 +12,8 @@ def gen():
 
 @patch('eventlib.listener.redis_connection')
 @patch('eventlib.listener.process_external')
-def test_read_events(process_external, redis_connection):
+@patch('eventlib.conf.settings')
+def test_read_events(settings, process_external, redis_connection):
     pubsub = redis_connection.get_connection.return_value.pubsub
     pubsub.return_value.listen.side_effect = gen
     listen_for_events()

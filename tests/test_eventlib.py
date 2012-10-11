@@ -77,22 +77,14 @@ def test_celery_process_wrapper(process):
     process.assert_called_once_with('name', 'data')
 
 
-@patch('django.conf.importlib')
-def test_django_integration(importlib):
+@patch('eventlib.conf.settings')
+def test_django_integration(settings):
     # Given I mock django conf
-    settings = importlib.import_module.return_value
     settings.LOCAL_GEOLOCATION_IP = 'CHUCK NORRIS'
 
-    # When I reload the eventlib conf with the django environment
-    # variable
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'LOL'
-    reload(conf)
-
-    # Then it should contain the mocked values
-    conf.LOCAL_GEOLOCATION_IP.should.equal('CHUCK NORRIS')
-
-    # Cleaning up
-    del os.environ['DJANGO_SETTINGS_MODULE']
+    # When I try to access a variable using the getsetting method, then
+    # it should contain the mocked values
+    conf.getsetting('LOCAL_GEOLOCATION_IP').should.equal('CHUCK NORRIS')
 
 
 def test_date_serializer_and_unserializer():
@@ -103,7 +95,7 @@ def test_date_serializer_and_unserializer():
         my_date)
 
 
-@patch('eventlib.core.settings')
+@patch('eventlib.conf.settings')
 @patch('eventlib.core.import_module')
 def test_importing_events(import_module, settings):
     settings.INSTALLED_APPS = ['foobar', 'test_app']

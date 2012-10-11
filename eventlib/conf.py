@@ -13,20 +13,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Holds configuration values for the eventlib"""
+"""Holds a very thin wrapper to get default values for configuration
+keys in the django settings system"""
 
-import os
-
-DEBUG = True
-
-LOCAL_GEOLOCATION_IP = ''
+from django.conf import settings
 
 
-# Django compatibility layer
+def getsetting(key, default=None):
+    """Just a thin wrapper to avoid repeating code
 
-if 'DJANGO_SETTINGS_MODULE' in os.environ:
-    from django.conf import settings
-
-    DEBUG = getattr(settings, "DEBUG", DEBUG)
-    LOCAL_GEOLOCATION_IP = getattr(
-        settings, "LOCAL_GEOLOCATION_IP", LOCAL_GEOLOCATION_IP)
+    Also, this makes it easier to find places that are using
+    configuration values and change them if we need in the future.
+    """
+    return getattr(settings, key, default)
