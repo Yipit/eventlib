@@ -53,3 +53,19 @@ def test_event_broadcast(redis_connection):
         'eventlib',
         '{"answer": 42, "age": 25, "name": "stuff", "extra": "extra_data"}',
     )
+
+
+@patch('eventlib.api.redis_connection')
+def test_event_default_broadcast(conn):
+
+    # Given I declare a new event
+    class CoolEvent(eventlib.BaseEvent):
+        pass
+
+    # When I create my event with some data
+    data = {'developer': 'Steve', 'skills': 'a lot!'}
+    event = CoolEvent('stuff', data)
+
+    # Then the default broadcast function should return the same data
+    # that was informed before
+    event.broadcast(data).should.equal(data)

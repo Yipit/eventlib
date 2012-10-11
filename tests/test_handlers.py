@@ -70,18 +70,24 @@ def test_handler_registry_cleanup():
     def do_more_nothing(data):
         return 0
 
+    @eventlib.external_handler('stuff.Foobaz')
+    def do_a_lot_more_nothing(data):
+        return 0
+
     core.HANDLER_REGISTRY.should.have.length_of(2)
     core.HANDLER_REGISTRY['stuff.Klass'].should.be.equals([do_nothing])
     core.HANDLER_REGISTRY['stuff.Blah'].should.be.equals([do_another_nothing])
 
-    core.EXTERNAL_HANDLER_REGISTRY.should.have.length_of(1)
+    core.EXTERNAL_HANDLER_REGISTRY.should.have.length_of(2)
     core.EXTERNAL_HANDLER_REGISTRY['stuff.Foobar'].should.be.equals([do_more_nothing])
+    core.EXTERNAL_HANDLER_REGISTRY['stuff.Foobaz'].should.be.equals([do_a_lot_more_nothing])
 
     core.cleanup_handlers('stuff.Klass')
     dict(core.HANDLER_REGISTRY).should.be.equals({
         'stuff.Blah': [do_another_nothing],
     })
 
+    core.cleanup_handlers('stuff.Foobaz')
     dict(core.EXTERNAL_HANDLER_REGISTRY).should.be.equals({
         'stuff.Foobar': [do_more_nothing],
     })

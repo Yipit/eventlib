@@ -20,9 +20,16 @@ from eventlib.listener import listen_for_events
 
 
 def gen():
+    """Generate events for the test_read_events function"""
     for i in range(2):
         test_data = ejson.dumps({'name': 'app.TestEvent', 'a': 'b'})
         yield {'type': 'message', 'data': test_data}
+
+
+def gen_non_message_events():
+    """Generate events for the test_read_events_skip_non_messages function"""
+    for i in range(2):
+        yield {'type': 'stuff', 'data': ejson.dumps({})}
 
 
 @patch('eventlib.listener.redis_connection')
@@ -37,3 +44,20 @@ def test_read_events(settings, process_external, redis_connection):
         call(u'app.TestEvent', {'a': 'b'}),
         call(u'app.TestEvent', {'a': 'b'}),
     ])
+
+
+@patch('eventlib.listener.redis_connection')
+@patch('eventlib.listener.process_external')
+@patch('eventlib.conf.settings')
+def test_read_events_skip_non_messages(settings, process_external, conn):
+
+    # Given I mock the pubsub connection to return only messages with
+    # types different from "message"
+    pubsub = conn.get_connection.return_value.pubsub
+    pubsub.return_value.listen.side_effect = gen_non_message_events
+
+    # When I listen to the events
+    listen_for_events()
+
+    # Then No messages should be processed
+    process_external.assert_has_calls([])

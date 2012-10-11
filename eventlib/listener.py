@@ -19,6 +19,11 @@ from eventlib.util import redis_connection
 
 
 def listen_for_events():
+    """Pubsub event listener
+
+    Listen for events in the pubsub bus and calls the process function
+    when somebody comes to play.
+    """
     import_event_modules()
     conn = redis_connection.get_connection()
     pubsub = conn.pubsub()

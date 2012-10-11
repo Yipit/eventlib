@@ -112,6 +112,11 @@ class BaseEvent(object):
             client.publish("eventlib", data)
 
     def broadcast(self, data):
+        """Returns all the data that will be passed to the external handlers
+
+        Override this method and update the `data` dictionary to provide
+        all the data that you want to pass to external handlers.
+        """
         return data
 
 
