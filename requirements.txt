@@ -7,3 +7,4 @@ python-dateutil==1.5
 coverage
 Django>=1.4.1
 steadymark>=0.4.3
+redis==2.7.1
