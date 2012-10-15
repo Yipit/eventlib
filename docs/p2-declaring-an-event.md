@@ -1,7 +1,7 @@
 # Eventlib tutorial (p2)
 
 This is the second step towards a deeper understanding of the
-eventlib. The first one is just ["The basic usage of eventlib"](README.md).
+eventlib. The first one is just ["The basic usage of eventlib"](p1-tutorial.md).
 
 In this small article, you'll learn in depth how to declare an event and
 it's handlers.
@@ -112,4 +112,4 @@ running.
 ## Going further
 
 This is the second part of the eventlib tutorial. The next part is the
-"Asynchronous logging" article.
+["Asynchronous logging"](docs/p3-asynchronous-logging.md) article.

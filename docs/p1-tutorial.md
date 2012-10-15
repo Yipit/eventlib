@@ -132,5 +132,4 @@ than the first one:
 
 This tutorial shows only the basic features of eventlib. The next step
 is to take a look at the
-["Declaring an event and its handlers"](docs/p2-declaring-an-event.md)
-page.
+["Declaring an event and its handlers"](p2-declaring-an-event.md) page.
