@@ -72,8 +72,8 @@ You have two lines that actually implement your view and ~10 lines for
 logging stuff. Some bad things that the unnecessary coupling between the
 view and the logging can cause:
 
- * Harder to maintain this code
- * A pain to write tests
+ * Harder to maintain this code;
+ * A pain to write tests;
  * If the redis call fail, the mysql call **will** fail, and the user will
    get a nice 500 error page instead of his product.
 
@@ -98,7 +98,7 @@ new file in your django app called `events.py`. Inside this file, you
 need to declare your event class, like this:
 
 ```python
-from eventlib import BaseEvent, @handler
+from eventlib import BaseEvent, handler
 
 class ProductViewedEvent(BaseEvent):
 
@@ -124,6 +124,6 @@ than the first one:
    need to touch your views.py file. It's also easier to write tests for
    both view and event.
  * Fault tolerant: If you have an outage in your redis system, your
-   customer will still be able to buy shoes, cause the event runs
+   customer will still be able to buy shoes, because the event runs
    separately from your business logic (in separate machines if you like
    celery).
