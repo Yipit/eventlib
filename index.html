@@ -1,0 +1,267 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Eventlib by Yipit</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Eventlib</h1>
+        <p>Async event management</p>
+
+        <p class="view"><a href="https://github.com/Yipit/eventlib">View the Project on GitHub <small>Yipit/eventlib</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/Yipit/eventlib/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/Yipit/eventlib/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/Yipit/eventlib">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Event API spec</h1>
+
+<p>This is an attempt to specify a generic, but flexible way to log events
+in our codebase. There are two public APIs.</p>
+
+<h2>Public api</h2>
+
+<h3>Recording events</h3>
+
+<p>In order to log an event, you need two things: the event name and the
+data that it expects. Here's an example:</p>
+
+<div class="highlight"><pre><span class="c"># steadymark: ignore</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">eventlib</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">log</span><span class="p">(</span><span class="s">'app.EventName'</span><span class="p">,</span> <span class="p">{</span><span class="s">'username'</span><span class="p">:</span> <span class="s">'test guy'</span><span class="p">})</span>
+</pre></div>
+
+<p>The event name above contains two very important pieces of information
+about the event: the app and the class name that inherits from
+<code>BaseEvent</code>. It is <em>required</em> to declare your events in a module called
+<code>events</code> inside the app folder. We will go deeper into it in the next
+section.</p>
+
+<p>If, by any chance, you try to access an event that does not exist, a
+custom exception should be raised, stating exactly what happened:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="c"># inside the event/log.py</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">EventNotFound</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">pass</span>
+<span class="o">...</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">_get_event</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">app</span><span class="p">,</span> <span class="n">event_name</span> <span class="o">=</span> <span class="n">_parse_event_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">get_events</span><span class="p">():</span>
+<span class="o">...</span>         <span class="k">raise</span> <span class="n">EventNotFound</span><span class="p">(</span>
+<span class="o">...</span>             <span class="s">'There is no event named {} in the {} app'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="o">...</span>                 <span class="n">event_name</span><span class="p">,</span> <span class="n">app</span>
+<span class="o">...</span>             <span class="p">)</span>
+<span class="o">...</span>         <span class="p">)</span>
+</pre></div>
+
+<h3>Declaring an event</h3>
+
+<p>This is a three step process.</p>
+
+<ol>
+<li>Declare an event object</li>
+<li>Optionally provide a component to validate the data received by this
+event.</li>
+<li>
+<p>Describe the handlers.</p>
+
+<p>So, we end up with something like this:</p>
+
+<pre>
+        -------------
+       | event class |
+        -------------
+              |
+             / \
+     optional   handlers
+    validator
+</pre>
+</li>
+</ol><p>Declaring an event should be as simple as the following example:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">eventlib</span> <span class="kn">import</span> <span class="n">BaseEvent</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">DealClick</span><span class="p">(</span><span class="n">BaseEvent</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">pass</span>
+</pre></div>
+
+<p>This is the only required step to declare an event. But, our event won't
+go anywhere without <code>handlers</code>. We use them to declare the actions that
+the event will actually trigger. Writing to a database, making an http
+call or executing a celery task are some examples of actions that can be
+declared in a handler.</p>
+
+<p>The first way to add a handler to an event is by adding a decorated
+method to your event class. Like this:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">eventlib</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">eventlib.core</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">EmailClick</span><span class="p">(</span><span class="n">eventlib</span><span class="o">.</span><span class="n">BaseEvent</span><span class="p">):</span>
+<span class="o">...</span>     <span class="nd">@eventlib.handler</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">increment_redis_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">key</span> <span class="o">=</span> <span class="s">'deal:{}:clicks'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'key'</span><span class="p">))</span>
+<span class="o">...</span>         <span class="bp">self</span><span class="o">.</span><span class="n">redis</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">incr</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="nd">@eventlib.handler</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">save_to_mysql</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="o">...</span>         <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">'unused_key'</span><span class="p">)</span>
+<span class="o">...</span>         <span class="bp">self</span><span class="o">.</span><span class="n">mysql</span><span class="p">(</span><span class="s">'apps.EmailClick'</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">eventlib</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">HANDLER_REGISTRY</span><span class="p">[</span><span class="n">EmailClick</span><span class="p">]</span>
+<span class="p">[</span><span class="o">&lt;</span><span class="n">unbound</span> <span class="n">method</span> <span class="n">EmailClick</span><span class="o">.</span><span class="n">save_to_mysql</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">unbound</span> <span class="n">method</span> <span class="n">EmailClick</span><span class="o">.</span><span class="n">increment_redis_key</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+
+<p>But if you are in a scenario where functions will fit your needs better,
+like when you need to declare a handler in another module, you can do
+something like this:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">eventlib</span>
+<span class="o">&gt;&gt;&gt;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nd">@eventlib.handler</span><span class="p">(</span><span class="s">'api.ApiCall'</span><span class="p">)</span>
+<span class="o">...</span> <span class="k">def</span> <span class="nf">call_3rd_party_api</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">api_key</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s">'api_key'</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">THIRDPARTYAPI_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">api_key</span><span class="p">))</span>
+<span class="o">...</span>     <span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="n">res</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">discount</span><span class="o">=</span><span class="mi">99</span><span class="p">)</span>
+</pre></div>
+
+<p>Please notice that handlers declared as methods will always be called
+<em>before</em> the function based handlers.</p>
+
+<h3>Data validation</h3>
+
+<p>Events are added to a queue before being processed. It's a long road
+from calling the <code>log()</code> function to actually using the data passed to
+it. So, instead of allowing the log processor to start all the steps of
+serialization, sending, deserialization and so on, this API provides a
+way to validate the data that the log expects. This validation will be
+called when the task runs. Here's the way to validate your event's data:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">eventlib</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">MyEvent</span><span class="p">(</span><span class="n">eventlib</span><span class="o">.</span><span class="n">BaseEvent</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">required_keys</span> <span class="o">=</span> <span class="s">'deal_id'</span><span class="p">,</span> <span class="s">'user_id'</span><span class="p">,</span> <span class="s">'code'</span>
+<span class="o">...</span>         <span class="n">missing_keys</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">...</span>         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">required_keys</span><span class="p">:</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="n">missing_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">missing_keys</span><span class="p">:</span>
+<span class="o">...</span>             <span class="k">raise</span> <span class="n">eventlib</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+<span class="o">...</span>                 <span class="s">'The following keys are missing: {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="o">...</span>                     <span class="s">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_keys</span><span class="p">)))</span>
+</pre></div>
+
+<p>There's also a helper for this very common case:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="o">...</span>    <span class="c"># This call will raise the ValidationError if any of these</span>
+<span class="o">...</span>    <span class="c"># keys are missing</span>
+<span class="o">...</span>    <span class="bp">self</span><span class="o">.</span><span class="n">require_data_keys</span><span class="p">([</span><span class="s">'deal_id'</span><span class="p">,</span> <span class="s">'user_id'</span><span class="p">,</span> <span class="s">'code'</span><span class="p">])</span>
+</pre></div>
+
+<p>Behind the scenes, things are something like this:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">event</span> <span class="o">=</span> <span class="n">special_import</span><span class="p">(</span><span class="n">name</span><span class="p">)()</span>
+<span class="o">...</span>     <span class="k">try</span><span class="p">:</span>
+<span class="o">...</span>         <span class="n">data</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">clean</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">except</span> <span class="n">ValidationError</span><span class="p">:</span>
+<span class="o">...</span>         <span class="n">log_to_sentry</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">"Invalid Data Passed to blah from foo"</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">else</span><span class="p">:</span>
+<span class="o">...</span>         <span class="n">delay_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+
+<h2>Params that events can take</h2>
+
+<p>Events can take any kind of parameter serializable by the <code>json.dumps</code>
+function. If you are willing to pass parameters that are not supported
+by this library by default, you will need to refer to the
+<a href="https://github.com/Yipit/eventlib/blob/master/docs/extensible-serialization.md">extensible-serialization</a>
+document.</p>
+
+<h2>Events are not immediately processed</h2>
+
+<p>As we don't want to compromise the performance of our main application
+with something secondary like logging, this spec also demands that all
+logging should run in separate tasks dispatched through celery.</p>
+
+<p>The flow is like this:</p>
+
+<pre>
+     ---------------------
+    | eventlib.log() call |
+     ---------------------
+         \ -----------------
+          | serialize(data) |
+           -----------------
+                \ ----------------------
+                 | log_processing.delay |
+                / ----------------------
+           -------------------
+          | deserialize(data) |
+         / -------------------
+     ------------------------
+    | eventlib.process(data) |
+     ------------------------
+</pre>
+
+<h3>Handlers should fail gracefully</h3>
+
+<p>There can be a list of different handlers to execute in the same event
+processing and we must ensure that if one of these handlers fail, the
+other ones will have their chance to try. This way, the <code>process()</code>
+functions should iterate over all registered handlers for that event
+taking care to handle any error <em>and</em> log it with the default python
+<code>logging</code> module. Something like this:</p>
+
+<pre><code>&gt;&gt;&gt; handlers = self.registered_handlers()
+... for h in handlers:
+...     try:
+...         h(deserialized_data)
+...     except:
+...         log_to_sentry()
+</code></pre>
+
+<h2>JavaScript API</h2>
+
+<p>If you are a front end developer and are afraid that you would be out of
+the new event sensation, don't worry! We've got JavaScript</p>
+
+<p>There's an HTTP view that wraps the <code>event.log()</code> call. On top of this
+function, we have the <code>yipit.event.log()</code> JS function that works exactly
+like the python version.</p>
+
+<p>Behind this JavaScript call, there's an ajax call in the following
+format:</p>
+
+<pre><code>POST /event/log?__event__=app.EventName&amp;param1=val1&amp;param2=val2
+</code></pre>
+
+<p>The view will parse the query string and build something like this:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="n">event_name</span> <span class="o">=</span> <span class="s">'app.EventName'</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s">'param1'</span><span class="p">:</span> <span class="s">'val1'</span><span class="p">,</span> <span class="s">'param2'</span><span class="p">:</span> <span class="s">'val2'</span><span class="p">}</span>
+</pre></div>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/Yipit">Yipit</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
