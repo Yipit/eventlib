@@ -1,4 +1,4 @@
-# Eventlib tutorial
+# Eventlib tutorial (p1)
 
 ## Intro
 
@@ -132,5 +132,5 @@ than the first one:
 
 This tutorial shows only the basic features of eventlib. The next step
 is to take a look at the
-["Declaring an event and its handlers"](docs/declaring-an-event.md)
+["Declaring an event and its handlers"](docs/p2-declaring-an-event.md)
 page.
