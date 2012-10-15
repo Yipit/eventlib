@@ -91,7 +91,7 @@ Wait, is that it? Is it everything that you need to do to log your
 stuff?  Well, it's pretty much everything you need to do in the
 view. Behind the scenes you still have to declare the event itself.
 
-## Declaring an event
+## The event class
 
 To implement the event declared above, you'll need, first, to create a
 new file in your django app called `events.py`. Inside this file, you
@@ -127,3 +127,10 @@ than the first one:
    customer will still be able to buy shoes, because the event runs
    separately from your business logic (in separate machines if you like
    celery).
+
+## Going further
+
+This tutorial shows only the basic features of eventlib. The next step
+is to take a look at the
+["Declaring an event and its handlers"](docs/declaring-an-event.md)
+page.
