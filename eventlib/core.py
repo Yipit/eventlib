@@ -140,13 +140,12 @@ def process_external(event_name, data):
     """Iterates over the event handler registry and execute each found
     handler.
 
-    It takes the event name and its its `data`, passing the return of
-    `ejson.loads(data)` to the found handlers.
+    It takes the event name and its `data`, passing the return of
+    data to the found handlers.
     """
-    deserialized = loads(data)
     for handler in find_external_handlers(event_name):
         try:
-            handler(deserialized)
+            handler(data)
         except Exception as exc:
             logger.warning(
                 (u'One of the handlers for the event "{}" has failed with the '

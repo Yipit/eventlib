@@ -44,7 +44,7 @@ def test_process_external(find_event):
     eventlib.external_handler('app.Event')(handler)
 
     data = {'file': '/etc/passwd', 'server': 'yipster'}
-    core.process_external('app.Event', ejson.dumps(data))
+    core.process_external('app.Event', data)
 
     handler.assert_called_once_with(data)
 
@@ -108,7 +108,7 @@ def test_process_external_fails_gracefully(settings, logger, find_event):
 
     data = {'a': 1}
     event = 'myapp.CoolEvent'
-    core.process_external(event, ejson.dumps(data))
+    core.process_external(event, data)
 
     logger.warning.assert_called_once_with(
         'One of the handlers for the event "myapp.CoolEvent" has '
@@ -140,6 +140,6 @@ def test_process_external_raises_the_exception_when_debugging(
     handler_fail = Mock()
     handler_fail.side_effect = ValueError('P0wned!!!')
     eventlib.external_handler('myapp.CoolEvent')(handler_fail)
-    name, data = 'myapp.CoolEvent', ejson.dumps({'a': 1})
+    name, data = 'myapp.CoolEvent', {'a': 1}
     core.process_external.when.called_with(name, data).should.throw(
         ValueError, 'P0wned!!!')
