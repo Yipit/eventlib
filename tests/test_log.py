@@ -16,14 +16,15 @@
 from mock import Mock, patch
 
 import eventlib
-from eventlib import conf, core, ejson
+from eventlib import core, ejson
 
 
 @patch('eventlib.core.datetime')
 @patch('eventlib.core.process')
 @patch('eventlib.core.find_event')
-def test_log(find_event, process, datetime):
-    conf.DEBUG = True
+@patch('eventlib.api.conf')
+def test_log(conf, find_event, process, datetime):
+    conf.getsetting.return_value = True
     core.cleanup_handlers()
     datetime.now.return_value = 'tea time'
 
@@ -41,8 +42,9 @@ def test_log(find_event, process, datetime):
 @patch('eventlib.api.tasks')
 @patch('eventlib.core.find_event')
 @patch('eventlib.core.datetime')
-def test_log_when_debug_is_false(datetime, find_event, tasks):
-    conf.DEBUG = False
+@patch('eventlib.api.conf')
+def test_log_when_debug_is_false(conf, datetime, find_event, tasks):
+    conf.getsetting.return_value = False
     core.cleanup_handlers()
     datetime.now.return_value = 'tea time'
 
@@ -55,8 +57,9 @@ def test_log_when_debug_is_false(datetime, find_event, tasks):
 @patch('eventlib.core.datetime')
 @patch('eventlib.core.process')
 @patch('eventlib.core.find_event')
-def test_log_insert_datetime(find_event, process, datetime):
-    conf.DEBUG = True
+@patch('eventlib.api.conf')
+def test_log_insert_datetime(conf, find_event, process, datetime):
+    conf.getsetting.return_value = True
     datetime.now.return_value = 'tea time'
     data = {'name': 'Event System', 'code': 42}
     eventlib.log('app.Event', data)

@@ -187,7 +187,7 @@ def log(name, data=None):
     data = ejson.dumps(data)        # TypeError
 
     # We don't use celery when developing
-    if conf.DEBUG:
+    if conf.getsetting('DEBUG'):
         core.process(name, data)
     else:
         tasks.process_task.delay(name, data)
