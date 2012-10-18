@@ -6,7 +6,7 @@ Long story short, eventlib is an asynchronous event tracking app for
 Django. This library was built upon the following values:
 
  * It must be deadly simple to log an event;
- * It must be possible to track different events in different ways;
+ * It must be possible to track each event in different ways;
  * Each different "event handler" must be completely separate and fail
    gracefully;
  * The event system must be asynchronous, so let's use centry;
@@ -80,10 +80,12 @@ view and the logging can cause:
 ## Trying again with eventlib
 
 ```python
+from eventlib import log
+
 @login_required()
 def product_page(request, pid):
     product = get_object_or_404(Product, pk=pid)
-    log('shoestore.ProductViewedEvent', {'user: user, 'product: product})
+    log('shoestore.ProductViewedEvent', {'user': user, 'product': product})
     return render_to_response(context={'product': product})
 ```
 
