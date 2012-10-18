@@ -1,18 +1,5 @@
 # Eventlib tutorial (p1)
 
-## Intro
-
-Long story short, eventlib is an asynchronous event tracking app for
-Django. This library was built upon the following values:
-
- * It must be deadly simple to log an event;
- * It must be possible to track each event in different ways;
- * Each different "event handler" must be completely separate and fail
-   gracefully;
- * The event system must be asynchronous, so let's use centry;
- * The library must be extensible;
- * 100% of test coverage is enough.
-
 ## Why you need eventlib
 
 Let's imagine that you have a website that sells shoes and you want to

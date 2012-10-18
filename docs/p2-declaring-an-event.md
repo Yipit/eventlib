@@ -112,4 +112,4 @@ running.
 ## Going further
 
 This is the second part of the eventlib tutorial. The next part is the
-["Asynchronous logging"](docs/p3-asynchronous-logging.md) article.
+["Asynchronous logging"](p3-asynchronous-logging.md) article.
