@@ -29,6 +29,10 @@ def _register_handler(event, fun, external=False):
     if external:
         registry = core.EXTERNAL_HANDLER_REGISTRY
 
+    if not isinstance(event, basestring):
+        # If not basestring, it is a BaseEvent subclass
+        event = core.parse_event_to_name(event)
+
     if event in registry:
         registry[event].append(fun)
     else:
