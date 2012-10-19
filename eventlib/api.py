@@ -30,7 +30,8 @@ def _register_handler(event, fun, external=False):
         registry = core.EXTERNAL_HANDLER_REGISTRY
 
     if not isinstance(event, basestring):
-        # If not basestring, it is a BaseEvent subclass
+        # If not basestring, it is a BaseEvent subclass.
+        # This occurs when class methods are registered as handlers 
         event = core.parse_event_to_name(event)
 
     if event in registry:
