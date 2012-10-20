@@ -40,10 +40,21 @@ def test_handler_with_methods():
             pass
 
     core.HANDLER_REGISTRY.should.have.length_of(1)
-    core.HANDLER_REGISTRY[MyEvent].should.be.equals([MyEvent.handle_stuff])
+    core.HANDLER_REGISTRY['tests.MyEvent'].should.be.equals([MyEvent.handle_stuff])
 
 
-def test_external_handler_with_methods():
+def test_wildcard_handler():
+    core.cleanup_handlers()
+
+    @eventlib.handler('stuff.*')
+    def do_nothing(data):
+        pass
+
+    core.HANDLER_REGISTRY.should.have.length_of(1)
+    core.HANDLER_REGISTRY['stuff.*'].should.be.equals([do_nothing])
+
+
+def test_external_handler():
     core.cleanup_handlers()
 
     @eventlib.external_handler('stuff.Klass')
@@ -111,16 +122,25 @@ def test_find_handlers(find_event):
         return 1
     core.find_handlers('app.Event').should.be.equals([stuff, other_stuff])
 
-    @eventlib.handler('app.Event2')
+    @eventlib.handler('other_app.Event2')
     def more_stuff(data):
         return 2
     core.find_handlers('app.Event').should.be.equals([stuff, other_stuff])
-    core.find_handlers('app.Event2').should.be.equals([more_stuff])
+    core.find_handlers('other_app.Event2').should.be.equals([more_stuff])
+
+    @eventlib.handler('app.*')
+    def even_more_stuff(data):
+        return 2
+    core.find_handlers('app.Event').should.be.equals([stuff, other_stuff, even_more_stuff])
 
     @eventlib.external_handler('app2.Event')
     def still_more_stuff(data):
         return 3
-    core.find_external_handlers('app2.Event').should.be.equals([still_more_stuff])
+
+    @eventlib.external_handler('app2.*')
+    def another_method(data):
+        return 4
+    core.find_external_handlers('app2.Event').should.be.equals([still_more_stuff, another_method])
 
     core.find_handlers('dont.Exist').should.be.equal([])
     core.find_external_handlers('dont.Exist').should.be.equal([])
@@ -137,10 +157,10 @@ def test_find_handlers_with_mixed_objects_and_strings(find_event):
 
     find_event.return_value = MyEvent
 
-    @eventlib.handler('stuff.MyEvent')
+    @eventlib.handler('tests.MyEvent')
     def do_nothing(data):
         return len(data)
 
-    core.find_handlers('stuff.MyEvent').should.be.equals([
+    core.find_handlers('tests.MyEvent').should.be.equals([
         MyEvent.handle_stuff, do_nothing
     ])

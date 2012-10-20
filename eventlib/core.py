@@ -16,10 +16,11 @@
 """Implementation of the basic operations for the eventlib"""
 
 
-import logging
 from collections import OrderedDict
 from datetime import datetime
+import fnmatch
 from importlib import import_module
+import logging
 
 from .conf import getsetting
 from .util import get_ip
@@ -50,6 +51,12 @@ def parse_event_name(name):
             (u'The name "{}" is invalid. '
              u'Make sure you are using the "app.KlassName" format'
              ).format(name))
+
+
+def parse_event_to_name(event):
+    app_name = event.__module__.split('.')[0]
+    class_name = event.__name__
+    return u"{}.{}".format(app_name, class_name)
 
 
 def find_event(name):
@@ -88,21 +95,29 @@ def cleanup_handlers(event=None):
         EXTERNAL_HANDLER_REGISTRY.clear()
 
 
-def find_handlers(event_name):
-    """Small halper to find all handlers associated to a given event
+def find_handlers(event_name, registry=HANDLER_REGISTRY):
+    """Small helper to find all handlers associated to a given event
 
     If the event can't be found, an empty list will be returned, since
     this is an internal function and all validation against the event
     name and its existence was already performed.
     """
-    handlers = HANDLER_REGISTRY.get(find_event(event_name), [])
-    handlers.extend(HANDLER_REGISTRY.get(event_name, []))
+    handlers = []
+
+    # event_name can be a BaseEvent or the string representation
+    if isinstance(event_name, basestring):
+        matched_events = [event for event in registry.keys()
+            if fnmatch.fnmatchcase(event_name, event)]
+        for matched_event in matched_events:
+            handlers.extend(registry.get(matched_event))
+    else:
+        handlers = registry.get(find_event(event_name), [])
+
     return handlers
 
 
 def find_external_handlers(event_name):
-    handlers = EXTERNAL_HANDLER_REGISTRY.get(event_name, [])
-    return handlers
+    return find_handlers(event_name, registry=EXTERNAL_HANDLER_REGISTRY)
 
 
 def process(event_name, data):
