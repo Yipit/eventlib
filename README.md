@@ -9,7 +9,7 @@ Django. This library was built upon the following values:
  * It must be possible to track each event in different ways;
  * Each different "event handler" must be completely separate and fail
    gracefully;
- * The event system must be asynchronous, so let's use centry;
+ * The event system must be asynchronous, so let's use celery;
  * The library must be extensible;
  * 100% of test coverage is enough.
 
