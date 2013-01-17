@@ -15,12 +15,12 @@
 
 """Implementation of the basic operations for the eventlib"""
 
-
-from collections import OrderedDict
-from datetime import datetime
 import fnmatch
-from importlib import import_module
 import logging
+
+from datetime import datetime
+from collections import OrderedDict
+from importlib import import_module
 
 from .conf import getsetting
 from .util import get_ip
