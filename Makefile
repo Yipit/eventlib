@@ -4,7 +4,7 @@ all: install_deps test
 
 export PYTHONPATH:=  ${PWD}:${PWD}/tests/resources
 
-filename=$(PACKAGE)-`python -c 'from $(PACKAGE) import version; print version'`.tar.gz
+filename=$(PACKAGE)-`python -c 'from $(PACKAGE) import __version__; print __version__'`.tar.gz
 install_deps:
 	@pip install -r requirements.txt
 
