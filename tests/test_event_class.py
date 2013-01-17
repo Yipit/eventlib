@@ -15,6 +15,7 @@
 
 
 from mock import patch
+from sure import expect
 
 import eventlib
 from eventlib import exceptions
@@ -38,8 +39,11 @@ channel_name = None
 channel_data = None
 
 
+@patch('eventlib.api.conf')
 @patch('eventlib.api.redis_connection')
-def test_event_broadcast(redis_connection):
+def test_event_broadcast(redis_connection, conf):
+    conf.getsetting.side_effect = lambda name: name != 'TESTING'
+
     class MyEvent(eventlib.BaseEvent):
         def broadcast(self, data):
             data['extra'] = 'extra_data'
@@ -52,6 +56,25 @@ def test_event_broadcast(redis_connection):
     redis_connection.get_connection.return_value.publish.assert_called_once_with(
         'eventlib',
         '{"answer": 42, "age": 25, "name": "stuff", "extra": "extra_data"}',
+    )
+
+
+@patch('eventlib.api.conf')
+@patch('eventlib.api.redis_connection')
+def test_event_broadcast_with_testing_settings(redis_connection, conf):
+    conf.getsetting.return_value = True
+
+    class MyEvent(eventlib.BaseEvent):
+        def broadcast(self, data):
+            data['extra'] = 'extra_data'
+            return data
+
+    data = {'name': 'Lincoln', 'age': 25, 'answer': 42}
+    event = MyEvent('stuff', data)
+
+    expect(event._broadcast).when.called.to.throw(
+        AssertionError,
+        'Eventlib calls must be mocked when settings.TESTING is True'
     )
 
 

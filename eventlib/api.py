@@ -31,7 +31,7 @@ def _register_handler(event, fun, external=False):
 
     if not isinstance(event, basestring):
         # If not basestring, it is a BaseEvent subclass.
-        # This occurs when class methods are registered as handlers 
+        # This occurs when class methods are registered as handlers
         event = core.parse_event_to_name(event)
 
     if event in registry:
@@ -108,6 +108,10 @@ class BaseEvent(object):
         return True
 
     def _broadcast(self):
+        if conf.getsetting('TESTING'):
+            raise AssertionError(
+                'Eventlib calls must be mocked when settings.TESTING is True')
+
         data = self.broadcast(self.data)
         client = redis_connection.get_connection()
         if client:
