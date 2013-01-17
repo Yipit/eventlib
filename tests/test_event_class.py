@@ -42,7 +42,7 @@ channel_data = None
 @patch('eventlib.api.conf')
 @patch('eventlib.api.redis_connection')
 def test_event_broadcast(redis_connection, conf):
-    conf.getsetting.side_effect = lambda name: name != 'TESTING'
+    conf.getsetting.side_effect = lambda name: name != 'UNIT_TESTING'
 
     class MyEvent(eventlib.BaseEvent):
         def broadcast(self, data):
@@ -74,7 +74,7 @@ def test_event_broadcast_with_testing_settings(redis_connection, conf):
 
     expect(event._broadcast).when.called.to.throw(
         AssertionError,
-        'Eventlib calls must be mocked when settings.TESTING is True'
+        'Eventlib calls must be mocked when settings.UNIT_TESTING is True'
     )
 
 

@@ -108,9 +108,9 @@ class BaseEvent(object):
         return True
 
     def _broadcast(self):
-        if conf.getsetting('TESTING'):
+        if conf.getsetting('UNIT_TESTING'):
             raise AssertionError(
-                'Eventlib calls must be mocked when settings.TESTING is True')
+                'Eventlib calls must be mocked when settings.UNIT_TESTING is True')
 
         data = self.broadcast(self.data)
         client = redis_connection.get_connection()

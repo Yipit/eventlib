@@ -20,7 +20,7 @@ import eventlib.serializers               # pyflakes:ignore
 from .api import log, handler, external_handler, BaseEvent  # pyflakes: ignore
 
 
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 
 __all__ = (
     'BaseEvent', 'handler', 'external_handler', 'log',
