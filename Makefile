@@ -9,6 +9,7 @@ install_deps:
 	@pip install -r requirements.txt
 
 test:
+	@rm -f .coverage
 	@echo "running python tests..."
 	@nosetests --verbosity=2 -sd tests
 	@echo "running documentation examples..."

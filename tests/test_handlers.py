@@ -127,6 +127,7 @@ def test_find_handlers(find_event):
         return 2
     core.find_handlers('app.Event').should.be.equals([stuff, other_stuff])
     core.find_handlers('other_app.Event2').should.be.equals([more_stuff])
+    core.find_handlers({'not': 'a string'}).should.be.equals([])
 
     @eventlib.handler('app.*')
     def even_more_stuff(data):
