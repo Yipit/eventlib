@@ -19,7 +19,7 @@ from setuptools import setup, find_packages
 if __name__ == '__main__':
     setup(
         name="eventlib",
-        version='0.0.8',
+        version='0.0.9',
         description=(
             u'Library to make it easy to track events in python/django apps'),
         author=u'Lincoln de Sousa',
