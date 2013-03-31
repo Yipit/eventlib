@@ -15,8 +15,10 @@
 
 """implementation of the RFC00001-event-log-spec proposal"""
 
+# Registering the serializers for eventlib
+import ejson.serializers        # pyflakes:ignore
+
 # Imports to register and expose things in the "eventlib" namespace.
-import eventlib.serializers               # pyflakes:ignore
 from .api import log, handler, external_handler, BaseEvent  # pyflakes: ignore
 
 

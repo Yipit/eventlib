@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from ejson import loads
 from eventlib.core import process_external, import_event_modules
-from eventlib.ejson import loads
 from eventlib.util import redis_connection
 
 

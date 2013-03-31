@@ -21,10 +21,10 @@ import logging
 from datetime import datetime
 from collections import OrderedDict
 from importlib import import_module
+from ejson import loads
 
 from .conf import getsetting
 from .util import get_ip
-from .ejson import loads
 from .exceptions import (
     ValidationError, EventNotFoundError, InvalidEventNameError
 )

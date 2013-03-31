@@ -1,29 +1,40 @@
 PACKAGE=eventlib
 
-all: install_deps test
+all: unit functional integration steadymark
 
-export PYTHONPATH:=  ${PWD}:${PWD}/tests/resources
+unit:
+	@make run_test suite=unit
 
-filename=$(PACKAGE)-`python -c 'from $(PACKAGE) import __version__; print __version__'`.tar.gz
+functional:
+	@make run_test suite=functional
+
+integration:
+	@make run_test suite=integration
+
+run_test:
+	@if [ -d tests/$(suite) ]; then \
+		echo "Running \033[0;32m$(suite)\033[0m test suite"; \
+		make prepare; \
+		nosetests --stop --with-coverage --cover-package=$(PACKAGE) \
+			--cover-branches --verbosity=2 -s tests/$(suite) ; \
+	fi
+
+steadymark:
+	@if hash steadymark 2>/dev/null; then \
+		steadymark; \
+	fi
+
+prepare: clean install_deps
+
 install_deps:
-	@pip install -r requirements.txt
-
-test:
-	@rm -f .coverage
-	@echo "running python tests..."
-	@nosetests --verbosity=2 -sd tests
-	@echo "running documentation examples..."
-	@steadymark README.md
+	@echo "Installing missing dependencies..."
+	@[ -e requirements.txt ] && (pip install -r requirements.txt) 2>&1>>.build.log
+	@[ -e development.txt ] && (pip install -r development.txt) 2>&1>>.build.log
 
 clean:
-	@printf "Cleaning up files that are already in .gitignore... "
-	@for pattern in `cat .gitignore`; do rm -rf $$pattern; find . -name "$$pattern" -exec rm -rf {} \;; done
-	@echo "OK!"
-
-release: clean test publish
-	@printf "Exporting to $(filename)... "
-	@tar czf $(filename) $(PACKAGE) setup.py README.md COPYING
-	@echo "DONE!"
+	@echo "Removing garbage..."
+	@find . -name '*.pyc' -delete
+	@rm -rf .coverage *.egg-info *.log build dist MANIFEST
 
 publish:
-	@python setup.py sdist register upload
+	python setup.py sdist upload

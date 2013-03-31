@@ -15,7 +15,7 @@
 
 """This file implements the public interface of our event tracker lib"""
 
-from . import ejson
+import ejson
 from . import conf
 from . import core
 from . import tasks

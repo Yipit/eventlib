@@ -12,11 +12,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import os
+
+from ejson import serializers
 from mock import Mock, call, patch
 from datetime import datetime
 
-from eventlib import exceptions, conf, core, tasks, serializers
+from eventlib import exceptions, conf, core, tasks
 
 
 def test_parse_event_name():
@@ -85,14 +86,6 @@ def test_django_integration(settings):
     # When I try to access a variable using the getsetting method, then
     # it should contain the mocked values
     conf.getsetting('LOCAL_GEOLOCATION_IP').should.equal('CHUCK NORRIS')
-
-
-def test_date_serializer_and_unserializer():
-    my_date = datetime(2012, 9, 26, 14, 31)
-    serializers.serialize_datetime(my_date).should.equal(
-        '2012-09-26T14:31:00')
-    serializers.deserialize_datetime('2012-09-26T14:31:00').should.equal(
-        my_date)
 
 
 @patch('eventlib.conf.settings')

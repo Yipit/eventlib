@@ -8,3 +8,4 @@ coverage
 Django>=1.4.1
 steadymark>=0.4.3
 redis==2.7.1
+ejson==0.1.1

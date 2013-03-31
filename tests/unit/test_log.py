@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import Mock, patch
-
+import ejson
 import eventlib
-from eventlib import core, ejson
+from mock import Mock, patch
+from eventlib import core
 
 
 @patch('eventlib.core.datetime')
