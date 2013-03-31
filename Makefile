@@ -27,9 +27,11 @@ steadymark:
 prepare: clean install_deps
 
 install_deps:
-	@echo "Installing missing dependencies..."
-	@[ -e requirements.txt ] && (pip install -r requirements.txt) 2>&1>>.build.log
-	@[ -e development.txt ] && (pip install -r development.txt) 2>&1>>.build.log
+	@if [ -z $$SKIP_DEPS ]; then \
+		echo "Installing missing dependencies..."; \
+		[ -e requirements.txt ] && (pip install -r requirements.txt) 2>&1>>.build.log; \
+		[ -e development.txt ] && (pip install -r development.txt) 2>&1>>.build.log; \
+	fi
 
 clean:
 	@echo "Removing garbage..."
