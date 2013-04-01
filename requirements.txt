@@ -1,11 +1,5 @@
 celery==3.0.9
 logan==0.5.0
-mock==1.0b1
-nose==1.2.0
-sure==1.0.6
-python-dateutil==1.5
-coverage
 Django>=1.4.1
-steadymark>=0.4.3
 redis==2.7.1
 ejson==0.1.3
