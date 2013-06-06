@@ -15,6 +15,6 @@ Django. This library was built upon the following values:
 
 To learn how it works, please refer to our tutorial:
 
- 1. [First steps to log an event](/Yipit/eventlib/blob/master/docs/p1-tutorial.md)
- 2. [Declaring an event](/Yipit/eventlib/blob/master/docs/p2-declaring-an-event.md)
- 3. [Asynchronous logging](/Yipit/eventlib/blob/master/docs/p3-asynchronous-logging.md)
+ 1. [First steps to log an event](docs/p1-tutorial.md)
+ 2. [Declaring an event](docs/p2-declaring-an-event.md)
+ 3. [Asynchronous logging](docs/p3-asynchronous-logging.md)
