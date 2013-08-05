@@ -70,6 +70,24 @@ def test_process_data_clean(logger, find_event):
 
 @patch('eventlib.core.find_event')
 @patch('eventlib.core.logger')
+@patch('os.environ', {'EVENTLIB_RAISE_ERRORS': "TRUE"})
+def test_process_data_clean_raise_errors(logger, find_event):
+    core.cleanup_handlers()
+
+    class MyEvent(eventlib.BaseEvent):
+        def clean(self):
+            raise exceptions.ValidationError('Owned!!11')
+
+    data = {'name': 'Lincoln', 'answer': 42}
+    find_event.return_value = MyEvent
+    core.process.when.called_with(
+        'stuff',
+        ejson.dumps(data)
+    ).should.throw(exceptions.ValidationError)
+
+
+@patch('eventlib.core.find_event')
+@patch('eventlib.core.logger')
 @patch('eventlib.conf.settings')
 def test_process_fails_gracefully(settings, logger, find_event):
     core.cleanup_handlers()

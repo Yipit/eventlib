@@ -17,6 +17,7 @@
 
 import fnmatch
 import logging
+import os
 
 from datetime import datetime
 from collections import OrderedDict
@@ -133,11 +134,14 @@ def process(event_name, data):
     try:
         event.clean()
     except ValidationError as exc:
-        logger.warning(
-            "The event system just got an exception while cleaning "
-            "data for the event '{}'\ndata: {}\nexc: {}".format(
-                event_name, data, str(exc)))
-        return
+        if os.environ.get('EVENTLIB_RAISE_ERRORS'):
+            raise
+        else:
+            logger.warning(
+                "The event system just got an exception while cleaning "
+                "data for the event '{}'\ndata: {}\nexc: {}".format(
+                    event_name, data, str(exc)))
+            return
 
     for handler in find_handlers(event_name):
         try:
