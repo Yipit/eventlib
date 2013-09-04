@@ -2,5 +2,7 @@ language: python
 python:
   - 2.7
 script: make
+
 install:
-    - pip install -r development.txt
+  - pip install https://codeload.github.com/clarete/curdling/tar.gz/b5e21e244802c52367e1c50b8f08d797c44fd4b2
+  - curdling -r development.txt -c http://curdling.yipit.com -u

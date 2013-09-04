@@ -11,10 +11,9 @@ functional:
 integration:
 	@make run_test suite=integration
 
-run_test:
+run_test: clean
 	@if [ -d tests/$(suite) ]; then \
 		echo "Running \033[0;32m$(suite)\033[0m test suite"; \
-		make prepare; \
 		nosetests --stop --with-coverage --cover-package=$(PACKAGE) \
 			--cover-branches --verbosity=2 -s tests/$(suite) ; \
 	fi
@@ -22,15 +21,6 @@ run_test:
 steadymark:
 	@if hash steadymark 2>/dev/null; then \
 		steadymark; \
-	fi
-
-prepare: clean install_deps
-
-install_deps:
-	@if [ -z $$SKIP_DEPS ]; then \
-		echo "Installing missing dependencies..."; \
-		[ -e requirements.txt ] && (pip install -r requirements.txt) 2>&1>>.build.log; \
-		[ -e development.txt ] && (pip install -r development.txt) 2>&1>>.build.log; \
 	fi
 
 clean:
