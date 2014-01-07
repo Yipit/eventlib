@@ -55,7 +55,7 @@ def test_event_broadcast(redis_connection, conf):
     event._broadcast()
     redis_connection.get_connection.return_value.publish.assert_called_once_with(
         'eventlib',
-        '{"answer": 42, "age": 25, "name": "stuff", "extra": "extra_data"}',
+        '{"age": 25, "answer": 42, "extra": "extra_data", "name": "stuff"}',
     )
 
 
