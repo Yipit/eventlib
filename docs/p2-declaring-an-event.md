@@ -91,7 +91,7 @@ class ProductViewedEvent(BaseEvent):
 As you can see, you can write your custom code to validate data sent to
 the event. For the most common case, which is just verifying if some
 keys are present, eventlib provides a method called `validate_keys`.
-heck the following example to understand how it works:
+Check the following example to understand how it works:
 
 ```
 class MyEvent(BaseEvent):
