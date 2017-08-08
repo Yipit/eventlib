@@ -13,12 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-from celery.task import task
+from pyqs import task
 from .core import process
 
 
-@task
+@task(queue='eventlib')
 def process_task(name, data):
     """Thin wrapper to transform `core.process()` in a celery task"""
     process(name, data)
