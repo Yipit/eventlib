@@ -58,8 +58,8 @@ install_requires, dependency_links = parse_requirements()
 
 if __name__ == '__main__':
     setup(
-        name="eventlib",
-        version='0.1.5',
+        name="eventlib-pyqs",
+        version='0.1.6',
         description=(
             u'Library to make it easy to track events in python/django apps'),
         long_description=local_file('README.md'),
